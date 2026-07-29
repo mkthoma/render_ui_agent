@@ -1,0 +1,727 @@
+{
+  "task": "Research the current population of London, Berlin and Paris, then show me the comparison.",
+  "run_id": "run-70df1485f099",
+  "status": "completed",
+  "gateway_base_url": "http://127.0.0.1:8111",
+  "provider": "gemini_1",
+  "model": "gemini-3.6-flash",
+  "unprompted": {
+    "checked_chars": 19647,
+    "component_named_in_compose_surface": false,
+    "component_named_in_whole_runtime": false,
+    "catalog_is_the_only_channel": true
+  },
+  "claims_offered": [
+    {
+      "label": "London",
+      "value": "London",
+      "confidence": "corroborated",
+      "sources": [
+        {
+          "title": "Population projections - London City Hall",
+          "url": "https://www.london.gov.uk/programmes-strategies/research-and-analysis/people-and-communities/population-projections"
+        },
+        {
+          "title": "State of London - London in Figures",
+          "url": "https://apps.london.gov.uk/state-of-london/report/london-in-figures"
+        },
+        {
+          "title": "Demography, London's Population & Geography - Trust For London",
+          "url": "https://trustforlondon.org.uk/data/geography-population/"
+        }
+      ],
+      "detail": "Based on the provided sources, current data and population research for London are tracked and published through several key official organizations:\n\n* **GLA Population Projections (London City Hall):** The Greater London Authority (GLA) Demography team regularly updates population projections using recent data and assumptions about future demographic trends. These projections estimate the future size and characteristics of London's resident population and offer multiple variants to account for uncertainty.\n* **State of London / London in Figures (GLA City Intelligence Unit):** Published annua"
+    },
+    {
+      "label": "Berlin",
+      "value": "Berlin",
+      "confidence": "corroborated",
+      "sources": [
+        {
+          "title": "Berlin Population Facts: Size, Density, and Change",
+          "url": "https://factsaboutberlin.com/berlin-population-facts/"
+        },
+        {
+          "title": "MATS | Bev\u00f6lkerungsstand - statistik-berlin-brandenburg.de",
+          "url": "https://www.statistik-berlin-brandenburg.de/datenportal/mats-bevoelkerungsstand/"
+        },
+        {
+          "title": "Demographic data about Berlin's population - Business Location Center",
+          "url": "https://www.businesslocationcenter.de/en/business-location/berlin-at-a-glance/demographic-data/"
+        }
+      ],
+      "detail": "Based on the provided search results, here are the current population facts and demographic details for Berlin:\n\n* **Growth Rate:** Berlin's population is growing by almost 40,000 inhabitants annually.\n* **Average Age:** The average age of the population is around 43 years.\n* **Demographics & Data Breakdown:** Official statistical tracking (such as from Statistik Berlin-Brandenburg) details population data, including recent changes between register and census counts in 2024. This demographic data is categorized by:\n  * Age, gender, and origin\n  * Marital status\n  * Districts and municipalities"
+    },
+    {
+      "label": "Paris",
+      "value": "Paris",
+      "confidence": "corroborated",
+      "sources": [
+        {
+          "title": "Full set of local data \u2212 Department of Paris (75) | Insee",
+          "url": "https://www.insee.fr/en/statistiques/6457611?geo=DEP-75"
+        },
+        {
+          "title": "Estimations de population - Ensemble - Ville de Paris | Insee",
+          "url": "https://www.insee.fr/fr/statistiques/serie/001760155"
+        },
+        {
+          "title": "Paris (Paris, Paris, France) - Population Statistics, Charts, Map ...",
+          "url": "https://www.citypopulation.de/en/france/paris/paris/75056__paris/"
+        }
+      ],
+      "detail": "Based on the provided search results, official population statistics and demographic estimates for the City and Department of Paris (Department 75 / Commune 75056) are available through the following sources:\n\n* **Insee (Institut national de la statistique et des \u00e9tudes \u00e9conomiques):** Provides official demographic estimates, total population counts, population variations, and full local statistical datasets covering births, deaths, family structure, and related metrics for Paris.\n* **City Population:** Offers statistical charts, maps, and historical population development data for the commune"
+    }
+  ],
+  "available_pointers": [
+    "/claim_0_sources",
+    "/claim_0_value",
+    "/claim_1_sources",
+    "/claim_1_value",
+    "/claim_2_sources",
+    "/claim_2_value",
+    "/claims",
+    "/goal",
+    "/item_0_detail",
+    "/item_0_label",
+    "/item_1_detail",
+    "/item_1_label",
+    "/item_2_detail",
+    "/item_2_label",
+    "/item_count",
+    "/items",
+    "/metrics",
+    "/progress_max",
+    "/progress_value",
+    "/results",
+    "/source_count",
+    "/spark",
+    "/subjects",
+    "/summary",
+    "/table_rows",
+    "/timeline",
+    "/title"
+  ],
+  "parse_ok": true,
+  "raw_surface": "{\"root\":\"root\",\"components\":[{\"id\":\"root\",\"type\":\"Column\",\"children\":[\"title\",\"summary\",\"stats_row\",\"table_card\",\"details_card\",\"timeline_card\"]},{\"id\":\"title\",\"type\":\"Text\",\"variant\":\"heading\",\"text\":{\"$bind\":\"/title\"}},{\"id\":\"summary\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/summary\"}},{\"id\":\"stats_row\",\"type\":\"Row\",\"align\":\"center\",\"justify\":\"spaceAround\",\"children\":[\"stat_cities\",\"stat_sources\"]},{\"id\":\"stat_cities\",\"type\":\"StatTile\",\"label\":\"Cities Analyzed\",\"value\":{\"$bind\":\"/item_count\"}},{\"id\":\"stat_sources\",\"type\":\"StatTile\",\"label\":\"Sources Referenced\",\"value\":{\"$bind\":\"/source_count\"}},{\"id\":\"table_card\",\"type\":\"Card\",\"title\":\"Summary Table\",\"children\":[\"data_table\"]},{\"id\":\"data_table\",\"type\":\"DataTable\",\"columns\":\"Item,Sources\",\"rows\":{\"$bind\":\"/table_rows\"}},{\"id\":\"details_card\",\"type\":\"Card\",\"title\":\"City Profiles & Evidence\",\"children\":[\"city_tabs\"]},{\"id\":\"city_tabs\",\"type\":\"Tabs\",\"labels\":\"London,Berlin,Paris\",\"children\":[\"tab_london\",\"tab_berlin\",\"tab_paris\"]},{\"id\":\"tab_london\",\"type\":\"Column\",\"children\":[\"london_detail\",\"london_evidence\"]},{\"id\":\"london_detail\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/item_0_detail\"}},{\"id\":\"london_evidence\",\"type\":\"EvidenceTile\",\"label\":\"London Research\",\"value\":{\"$bind\":\"/claim_0_value\"},\"confidence\":\"corroborated\",\"sources\":{\"$bind\":\"/claim_0_sources\"}},{\"id\":\"tab_berlin\",\"type\":\"Column\",\"children\":[\"berlin_detail\",\"berlin_evidence\"]},{\"id\":\"berlin_detail\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/item_1_detail\"}},{\"id\":\"berlin_evidence\",\"type\":\"EvidenceTile\",\"label\":\"Berlin Research\",\"value\":{\"$bind\":\"/claim_1_value\"},\"confidence\":\"corroborated\",\"sources\":{\"$bind\":\"/claim_1_sources\"}},{\"id\":\"tab_paris\",\"type\":\"Column\",\"children\":[\"paris_detail\",\"paris_evidence\"]},{\"id\":\"paris_detail\",\"type\":\"Text\",\"variant\":\"body\",\"text\":{\"$bind\":\"/item_2_detail\"}},{\"id\":\"paris_evidence\",\"type\":\"EvidenceTile\",\"label\":\"Paris Research\",\"value\":{\"$bind\":\"/claim_2_value\"},\"confidence\":\"corroborated\",\"sources\":{\"$bind\":\"/claim_2_sources\"}},{\"id\":\"timeline_card\",\"type\":\"Card\",\"title\":\"Research Timeline\",\"children\":[\"research_timeline\"]},{\"id\":\"research_timeline\",\"type\":\"Timeline\",\"title\":\"Execution Steps\",\"events\":{\"$bind\":\"/timeline\"}}]}",
+  "component_chosen": true,
+  "component_instances": [
+    {
+      "id": "london_evidence",
+      "type": "EvidenceTile",
+      "label": "London Research",
+      "value": {
+        "$bind": "/claim_0_value"
+      },
+      "confidence": "corroborated",
+      "sources": {
+        "$bind": "/claim_0_sources"
+      }
+    },
+    {
+      "id": "berlin_evidence",
+      "type": "EvidenceTile",
+      "label": "Berlin Research",
+      "value": {
+        "$bind": "/claim_1_value"
+      },
+      "confidence": "corroborated",
+      "sources": {
+        "$bind": "/claim_1_sources"
+      }
+    },
+    {
+      "id": "paris_evidence",
+      "type": "EvidenceTile",
+      "label": "Paris Research",
+      "value": {
+        "$bind": "/claim_2_value"
+      },
+      "confidence": "corroborated",
+      "sources": {
+        "$bind": "/claim_2_sources"
+      }
+    }
+  ],
+  "component_types_used": [
+    "Card",
+    "Column",
+    "DataTable",
+    "EvidenceTile",
+    "Row",
+    "StatTile",
+    "Tabs",
+    "Text",
+    "Timeline"
+  ],
+  "validator": {
+    "proposed": 21,
+    "accepted": 21,
+    "rejected": 0,
+    "ok": true,
+    "rejections": [],
+    "dangling_child_refs": [],
+    "component_types": [
+      "Card",
+      "Column",
+      "DataTable",
+      "EvidenceTile",
+      "Row",
+      "StatTile",
+      "Tabs",
+      "Text",
+      "Timeline"
+    ],
+    "component_count": 21
+  },
+  "surface": {
+    "root": "root",
+    "components": [
+      {
+        "id": "root",
+        "type": "Column",
+        "children": [
+          "title",
+          "summary",
+          "stats_row",
+          "table_card",
+          "details_card",
+          "timeline_card"
+        ]
+      },
+      {
+        "id": "title",
+        "type": "Text",
+        "variant": "heading",
+        "text": {
+          "$bind": "/title"
+        }
+      },
+      {
+        "id": "summary",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/summary"
+        }
+      },
+      {
+        "id": "stats_row",
+        "type": "Row",
+        "align": "center",
+        "justify": "spaceAround",
+        "children": [
+          "stat_cities",
+          "stat_sources"
+        ]
+      },
+      {
+        "id": "stat_cities",
+        "type": "StatTile",
+        "label": "Cities Analyzed",
+        "value": {
+          "$bind": "/item_count"
+        }
+      },
+      {
+        "id": "stat_sources",
+        "type": "StatTile",
+        "label": "Sources Referenced",
+        "value": {
+          "$bind": "/source_count"
+        }
+      },
+      {
+        "id": "table_card",
+        "type": "Card",
+        "title": "Summary Table",
+        "children": [
+          "data_table"
+        ]
+      },
+      {
+        "id": "data_table",
+        "type": "DataTable",
+        "columns": "Item,Sources",
+        "rows": {
+          "$bind": "/table_rows"
+        }
+      },
+      {
+        "id": "details_card",
+        "type": "Card",
+        "title": "City Profiles & Evidence",
+        "children": [
+          "city_tabs"
+        ]
+      },
+      {
+        "id": "city_tabs",
+        "type": "Tabs",
+        "labels": "London,Berlin,Paris",
+        "children": [
+          "tab_london",
+          "tab_berlin",
+          "tab_paris"
+        ]
+      },
+      {
+        "id": "tab_london",
+        "type": "Column",
+        "children": [
+          "london_detail",
+          "london_evidence"
+        ]
+      },
+      {
+        "id": "london_detail",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/item_0_detail"
+        }
+      },
+      {
+        "id": "london_evidence",
+        "type": "EvidenceTile",
+        "label": "London Research",
+        "value": {
+          "$bind": "/claim_0_value"
+        },
+        "confidence": "corroborated",
+        "sources": {
+          "$bind": "/claim_0_sources"
+        }
+      },
+      {
+        "id": "tab_berlin",
+        "type": "Column",
+        "children": [
+          "berlin_detail",
+          "berlin_evidence"
+        ]
+      },
+      {
+        "id": "berlin_detail",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/item_1_detail"
+        }
+      },
+      {
+        "id": "berlin_evidence",
+        "type": "EvidenceTile",
+        "label": "Berlin Research",
+        "value": {
+          "$bind": "/claim_1_value"
+        },
+        "confidence": "corroborated",
+        "sources": {
+          "$bind": "/claim_1_sources"
+        }
+      },
+      {
+        "id": "tab_paris",
+        "type": "Column",
+        "children": [
+          "paris_detail",
+          "paris_evidence"
+        ]
+      },
+      {
+        "id": "paris_detail",
+        "type": "Text",
+        "variant": "body",
+        "text": {
+          "$bind": "/item_2_detail"
+        }
+      },
+      {
+        "id": "paris_evidence",
+        "type": "EvidenceTile",
+        "label": "Paris Research",
+        "value": {
+          "$bind": "/claim_2_value"
+        },
+        "confidence": "corroborated",
+        "sources": {
+          "$bind": "/claim_2_sources"
+        }
+      },
+      {
+        "id": "timeline_card",
+        "type": "Card",
+        "title": "Research Timeline",
+        "children": [
+          "research_timeline"
+        ]
+      },
+      {
+        "id": "research_timeline",
+        "type": "Timeline",
+        "title": "Execution Steps",
+        "events": {
+          "$bind": "/timeline"
+        }
+      }
+    ],
+    "dataModel": {
+      "title": "Research the current population of London, Berlin and Paris, then show me the comparison.",
+      "goal": "Research the current population of London, Berlin and Paris, then show me the comparison.",
+      "summary": "Based on the provided data sources, exact numerical population counts for London, Berlin, and Paris were not included in the search results. However, the provided sources outline the official tracking mechanisms and demographic insights for each city:\n\n### City Overview & Demographic Findings\n\n* **London**\n  * **Official Data Sources:** Tracked by the Greater London Authority (GLA) Demography team (population projections), the GLA City Intelligence Unit (*State of London* report), and *Trust for London*.\n  * **Key Insights:** Demographics and local growth trends across various local geographies are regularly updated with multiple projection variants to account for demographic uncertainty.\n\n* **Berlin**\n  * **Official Data Sources:** Tracked by *Statistik Berlin-Brandenburg* and the *Business Location Center*.\n  * **Key Insights:** \n    * **Growth Rate:** The population increases by almost 40,000 inhabitants annually.\n    * **Average Age:** Approximately 43 years.\n    * Data is categorized by age, gender, origin, marital status, and district breakdown.\n\n* **Paris**\n  * **Official Data Sources:** Tracked by *Insee* (Institut national de la statistique et des \u00e9tudes \u00e9conomiques) for the City/Department of Paris (Department 75 / Commune 75056) and *City Population*.\n  * **Key Insights:** Official demographic estimates track total population variations, family structure, births, deaths, and historical population development.\n\n---\n\n### Comparison Summary\n\n| Metric / Detail | London | Berlin | Paris |\n| :--- | :--- | :--- | :--- |\n| **Exact Population Count** | *Not specified in provided data* | *Not specified in provided data* | *Not specified in provided",
+      "results": [
+        {
+          "label": "London",
+          "detail": "Based on the provided sources, current data and population research for London are tracked and published through several key official organizations:\n\n* **GLA Population Projections (London City Hall):** The Greater London Authority (GLA) Demography team regularly updates population projections using recent data and assumptions about future demographic trends. These projections estimate the future size and characteristics of London's resident population and offer multiple variants to account for uncertainty.\n* **State of London / London in Figures (GLA City Intelligence Unit):** Published annua"
+        },
+        {
+          "label": "Berlin",
+          "detail": "Based on the provided search results, here are the current population facts and demographic details for Berlin:\n\n* **Growth Rate:** Berlin's population is growing by almost 40,000 inhabitants annually.\n* **Average Age:** The average age of the population is around 43 years.\n* **Demographics & Data Breakdown:** Official statistical tracking (such as from Statistik Berlin-Brandenburg) details population data, including recent changes between register and census counts in 2024. This demographic data is categorized by:\n  * Age, gender, and origin\n  * Marital status\n  * Districts and municipalities"
+        },
+        {
+          "label": "Paris",
+          "detail": "Based on the provided search results, official population statistics and demographic estimates for the City and Department of Paris (Department 75 / Commune 75056) are available through the following sources:\n\n* **Insee (Institut national de la statistique et des \u00e9tudes \u00e9conomiques):** Provides official demographic estimates, total population counts, population variations, and full local statistical datasets covering births, deaths, family structure, and related metrics for Paris.\n* **City Population:** Offers statistical charts, maps, and historical population development data for the commune"
+        }
+      ],
+      "items": [
+        {
+          "label": "London"
+        },
+        {
+          "label": "Berlin"
+        },
+        {
+          "label": "Paris"
+        }
+      ],
+      "metrics": [
+        {
+          "label": "London",
+          "value": 3
+        },
+        {
+          "label": "Berlin",
+          "value": 3
+        },
+        {
+          "label": "Paris",
+          "value": 3
+        }
+      ],
+      "spark": [
+        3.0,
+        3.0,
+        3.0
+      ],
+      "table_rows": [
+        {
+          "Item": "London",
+          "Sources": 3
+        },
+        {
+          "Item": "Berlin",
+          "Sources": 3
+        },
+        {
+          "Item": "Paris",
+          "Sources": 3
+        }
+      ],
+      "item_count": 3,
+      "source_count": 9,
+      "claims": [
+        {
+          "label": "London",
+          "value": "London",
+          "confidence": "corroborated",
+          "sources": [
+            {
+              "title": "Population projections - London City Hall",
+              "url": "https://www.london.gov.uk/programmes-strategies/research-and-analysis/people-and-communities/population-projections"
+            },
+            {
+              "title": "State of London - London in Figures",
+              "url": "https://apps.london.gov.uk/state-of-london/report/london-in-figures"
+            },
+            {
+              "title": "Demography, London's Population & Geography - Trust For London",
+              "url": "https://trustforlondon.org.uk/data/geography-population/"
+            }
+          ],
+          "detail": "Based on the provided sources, current data and population research for London are tracked and published through several key official organizations:\n\n* **GLA Population Projections (London City Hall):** The Greater London Authority (GLA) Demography team regularly updates population projections using recent data and assumptions about future demographic trends. These projections estimate the future size and characteristics of London's resident population and offer multiple variants to account for uncertainty.\n* **State of London / London in Figures (GLA City Intelligence Unit):** Published annua"
+        },
+        {
+          "label": "Berlin",
+          "value": "Berlin",
+          "confidence": "corroborated",
+          "sources": [
+            {
+              "title": "Berlin Population Facts: Size, Density, and Change",
+              "url": "https://factsaboutberlin.com/berlin-population-facts/"
+            },
+            {
+              "title": "MATS | Bev\u00f6lkerungsstand - statistik-berlin-brandenburg.de",
+              "url": "https://www.statistik-berlin-brandenburg.de/datenportal/mats-bevoelkerungsstand/"
+            },
+            {
+              "title": "Demographic data about Berlin's population - Business Location Center",
+              "url": "https://www.businesslocationcenter.de/en/business-location/berlin-at-a-glance/demographic-data/"
+            }
+          ],
+          "detail": "Based on the provided search results, here are the current population facts and demographic details for Berlin:\n\n* **Growth Rate:** Berlin's population is growing by almost 40,000 inhabitants annually.\n* **Average Age:** The average age of the population is around 43 years.\n* **Demographics & Data Breakdown:** Official statistical tracking (such as from Statistik Berlin-Brandenburg) details population data, including recent changes between register and census counts in 2024. This demographic data is categorized by:\n  * Age, gender, and origin\n  * Marital status\n  * Districts and municipalities"
+        },
+        {
+          "label": "Paris",
+          "value": "Paris",
+          "confidence": "corroborated",
+          "sources": [
+            {
+              "title": "Full set of local data \u2212 Department of Paris (75) | Insee",
+              "url": "https://www.insee.fr/en/statistiques/6457611?geo=DEP-75"
+            },
+            {
+              "title": "Estimations de population - Ensemble - Ville de Paris | Insee",
+              "url": "https://www.insee.fr/fr/statistiques/serie/001760155"
+            },
+            {
+              "title": "Paris (Paris, Paris, France) - Population Statistics, Charts, Map ...",
+              "url": "https://www.citypopulation.de/en/france/paris/paris/75056__paris/"
+            }
+          ],
+          "detail": "Based on the provided search results, official population statistics and demographic estimates for the City and Department of Paris (Department 75 / Commune 75056) are available through the following sources:\n\n* **Insee (Institut national de la statistique et des \u00e9tudes \u00e9conomiques):** Provides official demographic estimates, total population counts, population variations, and full local statistical datasets covering births, deaths, family structure, and related metrics for Paris.\n* **City Population:** Offers statistical charts, maps, and historical population development data for the commune"
+        }
+      ],
+      "item_0_label": "London",
+      "item_0_detail": "Based on the provided sources, current data and population research for London are tracked and published through several key official organizations:\n\n* **GLA Population Projections (London City Hall):** The Greater London Authority (GLA) Demography team regularly updates population projections using recent data and assumptions about future demographic trends. These projections estimate the future size and characteristics of London's resident population and offer multiple variants to account for uncertainty.\n* **State of London / London in Figures (GLA City Intelligence Unit):** Published annua",
+      "claim_0_value": "London",
+      "claim_0_sources": [
+        {
+          "title": "Population projections - London City Hall",
+          "url": "https://www.london.gov.uk/programmes-strategies/research-and-analysis/people-and-communities/population-projections"
+        },
+        {
+          "title": "State of London - London in Figures",
+          "url": "https://apps.london.gov.uk/state-of-london/report/london-in-figures"
+        },
+        {
+          "title": "Demography, London's Population & Geography - Trust For London",
+          "url": "https://trustforlondon.org.uk/data/geography-population/"
+        }
+      ],
+      "item_1_label": "Berlin",
+      "item_1_detail": "Based on the provided search results, here are the current population facts and demographic details for Berlin:\n\n* **Growth Rate:** Berlin's population is growing by almost 40,000 inhabitants annually.\n* **Average Age:** The average age of the population is around 43 years.\n* **Demographics & Data Breakdown:** Official statistical tracking (such as from Statistik Berlin-Brandenburg) details population data, including recent changes between register and census counts in 2024. This demographic data is categorized by:\n  * Age, gender, and origin\n  * Marital status\n  * Districts and municipalities",
+      "claim_1_value": "Berlin",
+      "claim_1_sources": [
+        {
+          "title": "Berlin Population Facts: Size, Density, and Change",
+          "url": "https://factsaboutberlin.com/berlin-population-facts/"
+        },
+        {
+          "title": "MATS | Bev\u00f6lkerungsstand - statistik-berlin-brandenburg.de",
+          "url": "https://www.statistik-berlin-brandenburg.de/datenportal/mats-bevoelkerungsstand/"
+        },
+        {
+          "title": "Demographic data about Berlin's population - Business Location Center",
+          "url": "https://www.businesslocationcenter.de/en/business-location/berlin-at-a-glance/demographic-data/"
+        }
+      ],
+      "item_2_label": "Paris",
+      "item_2_detail": "Based on the provided search results, official population statistics and demographic estimates for the City and Department of Paris (Department 75 / Commune 75056) are available through the following sources:\n\n* **Insee (Institut national de la statistique et des \u00e9tudes \u00e9conomiques):** Provides official demographic estimates, total population counts, population variations, and full local statistical datasets covering births, deaths, family structure, and related metrics for Paris.\n* **City Population:** Offers statistical charts, maps, and historical population development data for the commune",
+      "claim_2_value": "Paris",
+      "claim_2_sources": [
+        {
+          "title": "Full set of local data \u2212 Department of Paris (75) | Insee",
+          "url": "https://www.insee.fr/en/statistiques/6457611?geo=DEP-75"
+        },
+        {
+          "title": "Estimations de population - Ensemble - Ville de Paris | Insee",
+          "url": "https://www.insee.fr/fr/statistiques/serie/001760155"
+        },
+        {
+          "title": "Paris (Paris, Paris, France) - Population Statistics, Charts, Map ...",
+          "url": "https://www.citypopulation.de/en/france/paris/paris/75056__paris/"
+        }
+      ],
+      "subjects": [
+        "London",
+        "Berlin",
+        "Paris"
+      ],
+      "timeline": [
+        {
+          "time": "1",
+          "label": "run_started"
+        },
+        {
+          "time": "2",
+          "label": "graph_patched"
+        },
+        {
+          "time": "3",
+          "label": "task_started search_1"
+        },
+        {
+          "time": "4",
+          "label": "task_started search_2"
+        },
+        {
+          "time": "5",
+          "label": "task_started search_3"
+        },
+        {
+          "time": "6",
+          "label": "task_succeeded search_2"
+        },
+        {
+          "time": "7",
+          "label": "graph_patched"
+        },
+        {
+          "time": "8",
+          "label": "task_succeeded search_1"
+        },
+        {
+          "time": "9",
+          "label": "graph_patched"
+        },
+        {
+          "time": "10",
+          "label": "task_succeeded search_3"
+        },
+        {
+          "time": "11",
+          "label": "graph_patched"
+        },
+        {
+          "time": "12",
+          "label": "task_started distill"
+        },
+        {
+          "time": "13",
+          "label": "task_succeeded distill"
+        },
+        {
+          "time": "14",
+          "label": "graph_patched"
+        },
+        {
+          "time": "15",
+          "label": "task_started surface"
+        }
+      ],
+      "progress_value": 4,
+      "progress_max": 5
+    }
+  },
+  "nodes": {
+    "distill": {
+      "skill": "distiller",
+      "state": "succeeded"
+    },
+    "search_1": {
+      "skill": "researcher",
+      "state": "succeeded"
+    },
+    "search_2": {
+      "skill": "researcher",
+      "state": "succeeded"
+    },
+    "search_3": {
+      "skill": "researcher",
+      "state": "succeeded"
+    },
+    "surface": {
+      "skill": "compose_surface",
+      "state": "succeeded"
+    }
+  },
+  "events": [
+    {
+      "sequence": 1,
+      "kind": "run_started",
+      "node_id": null
+    },
+    {
+      "sequence": 2,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 3,
+      "kind": "task_started",
+      "node_id": "search_1"
+    },
+    {
+      "sequence": 4,
+      "kind": "task_started",
+      "node_id": "search_2"
+    },
+    {
+      "sequence": 5,
+      "kind": "task_started",
+      "node_id": "search_3"
+    },
+    {
+      "sequence": 6,
+      "kind": "task_succeeded",
+      "node_id": "search_2"
+    },
+    {
+      "sequence": 7,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 8,
+      "kind": "task_succeeded",
+      "node_id": "search_1"
+    },
+    {
+      "sequence": 9,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 10,
+      "kind": "task_succeeded",
+      "node_id": "search_3"
+    },
+    {
+      "sequence": 11,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 12,
+      "kind": "task_started",
+      "node_id": "distill"
+    },
+    {
+      "sequence": 13,
+      "kind": "task_succeeded",
+      "node_id": "distill"
+    },
+    {
+      "sequence": 14,
+      "kind": "graph_patched",
+      "node_id": null
+    },
+    {
+      "sequence": 15,
+      "kind": "task_started",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 16,
+      "kind": "task_succeeded",
+      "node_id": "surface"
+    },
+    {
+      "sequence": 17,
+      "kind": "graph_patched",
+      "node_id": null
+    }
+  ],
+  "outcome": "chosen"
+}

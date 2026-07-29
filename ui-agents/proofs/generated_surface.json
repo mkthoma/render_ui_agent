@@ -1,0 +1,221 @@
+{
+  "model": "gemma4:26b",
+  "raw": "{\"root\":\"root\",\"components\":[\n  {\"id\":\"root\",\"type\":\"Column\",\"children\":[\"h\",\"grid_container\",\"chart_container\",\"table_container\"]},\n  {\"id\":\"h\",\"type\":\"Heading\",\"text\":{\"$bind\":\"/title\"}},\n  {\"id\":\"grid_container\",\"type\":\"Row\",\"align\":\"start\",\"justify\":\"spaceBetween\",\"children\":[\"t1\",\"t2\",\"t3\"]},\n  {\"id\":\"t1\",\"type\":\"StatTile\",\"label\":\"Papers\", \"value\":{\"$bind\":\"/kpi_papers\"},\"tone\":\"good\"},\n  {\"id\":\"t2\",\"type\":\"StatTile\",\"label\":\"Chunks\", \"value\":{\"$bind\":\"/kpi_chunks\"},\"tone\":\"neutral\"},\n             {\"id\":\"theading\",\"t_val\":true},\n  {\"id\":\"t3\",\"type\":\"StatTile\",\"label\":\"Corpus_undercore\", \"value\":{\"$bind\":\"/kpi_words\"},\"unit\":\"words\", \"tone\":\"neutral\"},\n  {\"id\":\"chart_container\",\"type\":\"Column\",\"children\":[\"bc\",\"div1\"]},\n  {\"id\":\"bc\",\"type\":\"TypoError_in_JSON_Logic_Check_Required_Wait_No_I_Must_Follow_Instructions_Strictly\"},\n  {\"id\":\"bc\",\"type\":\"BarChart\",\"title\":\"Chunks by Paper\", \"data\":{\"$bind\":\"/chunks_by_paper\"},\"xKey\":\"label\",\"yKey\":\"value\"},\n  {\"id\":\"div1\",\"type\":\"Divider\",\"children\":[]},\n  {\"id\":\"table_container\",\"type\":\"Column\",\"children\":[\"dt\"]},\n  {\"id\":\"dt\",\"type\":\"DataTable\",\"columns\":\"Paper,Chunks,Year\", \"rows\":{\"$bind\":\"/table_rows\"},\"sortable\":true,\"filterKey\":\"Paper\"},\n  {\"id\":\"grid_container\",\"type\":\"ragged_error_check\"},\n  {\"id\":\"t2\",\"type\":\"StatTile\",\"label\":\"Chunks\", \"value\":{\"$bind\":\"/kpi_chunks\"},\"tone\":\"undetermined\"},\n  {\"id\":\"t2\",\"type\":\"StatTile\",\"label\":\"Chunks\", \"value\":{\"$bind\":\"/kpi_chunks\"},\"tone\":\"neutral\"},\n  {\"id\":\"t3\",\"type\":\"type_error_check\"},\n  {\"id\":\"t3\",\"type\":\"StatTile\",\"type\":\"error\"},\n  {\"id\":\"t3\",\"type\":\"StatTile\",\"label\":\"Error_Check_In_JSON_Structure_Logic_Check_Required_Wait_No_I_Must_Follow_Instructions_Strictly\"},\n  {\"id\":\"t3\",\"type\":\"StatTile\",\"label\":\"Chunks\", \"value\":{\"$bind\":\"/kpi_words\"},\"unit\":\"words\", \"tone\":\"neutral\"}\n]}",
+  "surface_accepted": {
+    "root": "root",
+    "components": [
+      {
+        "id": "root",
+        "type": "Column",
+        "children": [
+          "h",
+          "grid_container",
+          "chart_container",
+          "table_container"
+        ]
+      },
+      {
+        "id": "grid_container",
+        "type": "Row",
+        "align": "start",
+        "justify": "spaceBetween",
+        "children": [
+          "t1",
+          "t2",
+          "t3"
+        ]
+      },
+      {
+        "id": "t1",
+        "type": "StatTile",
+        "label": "Papers",
+        "value": {
+          "$bind": "/kpi_papers"
+        },
+        "tone": "good"
+      },
+      {
+        "id": "t2",
+        "type": "StatTile",
+        "label": "Chunks",
+        "value": {
+          "$bind": "/kpi_chunks"
+        },
+        "tone": "neutral"
+      },
+      {
+        "id": "t3",
+        "type": "StatTile",
+        "label": "Corpus_undercore",
+        "value": {
+          "$bind": "/kpi_words"
+        },
+        "unit": "words",
+        "tone": "neutral"
+      },
+      {
+        "id": "chart_container",
+        "type": "Column",
+        "children": [
+          "bc",
+          "div1"
+        ]
+      },
+      {
+        "id": "bc",
+        "type": "BarChart",
+        "title": "Chunks by Paper",
+        "data": {
+          "$bind": "/chunks_by_paper"
+        },
+        "xKey": "label",
+        "yKey": "value"
+      },
+      {
+        "id": "div1",
+        "type": "Divider",
+        "children": []
+      },
+      {
+        "id": "table_container",
+        "type": "Column",
+        "children": [
+          "dt"
+        ]
+      },
+      {
+        "id": "dt",
+        "type": "DataTable",
+        "columns": "Paper,Chunks,Year",
+        "rows": {
+          "$bind": "/table_rows"
+        },
+        "sortable": true,
+        "filterKey": "Paper"
+      },
+      {
+        "id": "t2",
+        "type": "StatTile",
+        "label": "Chunks",
+        "value": {
+          "$bind": "/kpi_chunks"
+        },
+        "tone": "neutral"
+      },
+      {
+        "id": "t3",
+        "type": "StatTile",
+        "label": "Error_Check_In_JSON_Structure_Logic_Check_Required_Wait_No_I_Must_Follow_Instructions_Strictly"
+      },
+      {
+        "id": "t3",
+        "type": "StatTile",
+        "label": "Chunks",
+        "value": {
+          "$bind": "/kpi_words"
+        },
+        "unit": "words",
+        "tone": "neutral"
+      }
+    ],
+    "dataModel": {
+      "title": "Research corpus \u2014 composed by a live model",
+      "kpi_papers": 5,
+      "kpi_chunks": 19,
+      "kpi_words": 1038,
+      "chunks_by_paper": [
+        {
+          "label": "ReAct",
+          "value": 5
+        },
+        {
+          "label": "Attention",
+          "value": 4
+        },
+        {
+          "label": "DPO",
+          "value": 4
+        },
+        {
+          "label": "LoRA",
+          "value": 4
+        },
+        {
+          "label": "CoT",
+          "value": 2
+        }
+      ],
+      "table_rows": [
+        {
+          "Paper": "ReAct: Reasoning and Acting",
+          "Chunks": 5,
+          "Year": 2022
+        },
+        {
+          "Paper": "Attention Is All You Need",
+          "Chunks": 4,
+          "Year": 2017
+        },
+        {
+          "Paper": "Direct Preference Optimization",
+          "Chunks": 4,
+          "Year": 2023
+        },
+        {
+          "Paper": "LoRA: Low-Rank Adaptation",
+          "Chunks": 4,
+          "Year": 2021
+        },
+        {
+          "Paper": "Chain-of-Thought Prompting",
+          "Chunks": 2,
+          "Year": 2022
+        }
+      ]
+    }
+  },
+  "rejections": [
+    {
+      "component_id": "h",
+      "field": "type",
+      "invariant": "catalog",
+      "reason": "unknown component type 'Heading'"
+    },
+    {
+      "component_id": "theading",
+      "field": "type",
+      "invariant": "catalog",
+      "reason": "unknown component type None"
+    },
+    {
+      "component_id": "bc",
+      "field": "type",
+      "invariant": "catalog",
+      "reason": "unknown component type 'TypoError_in_JSON_Logic_Check_Required_Wait_No_I_Must_Follow_Instructions_Strictly'"
+    },
+    {
+      "component_id": "grid_container",
+      "field": "type",
+      "invariant": "catalog",
+      "reason": "unknown component type 'ragged_error_check'"
+    },
+    {
+      "component_id": "t2",
+      "field": "tone",
+      "invariant": "data-not-code",
+      "reason": "'undetermined' not in ('neutral', 'good', 'warn', 'bad')"
+    },
+    {
+      "component_id": "t3",
+      "field": "type",
+      "invariant": "catalog",
+      "reason": "unknown component type 'type_error_check'"
+    },
+    {
+      "component_id": "t3",
+      "field": "type",
+      "invariant": "catalog",
+      "reason": "unknown component type 'error'"
+    }
+  ]
+}

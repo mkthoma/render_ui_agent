@@ -1,0 +1,865 @@
+{
+  "surface": {
+    "run_id": "three_cities",
+    "component_count": 18,
+    "types_used": [
+      "Column",
+      "Row",
+      "StatTile",
+      "Text"
+    ],
+    "clean": true,
+    "answer": "London is the largest at about 9.5 million, Berlin about 3.75 million, and Paris about 2.06 million. The closest pair is Berlin and Paris, separated by roughly 1.64 million people.",
+    "surface": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "h_title",
+            "row_0",
+            "row_1",
+            "row_2",
+            "row_3",
+            "row_4",
+            "answer"
+          ]
+        },
+        {
+          "id": "h_title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/title"
+          }
+        },
+        {
+          "id": "row_0",
+          "type": "Row",
+          "align": "center",
+          "justify": "spaceBetween",
+          "children": [
+            "name_0",
+            "state_0"
+          ]
+        },
+        {
+          "id": "name_0",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/node_0_name"
+          }
+        },
+        {
+          "id": "state_0",
+          "type": "StatTile",
+          "label": "state",
+          "value": {
+            "$bind": "/node_0_state"
+          },
+          "tone": "good"
+        },
+        {
+          "id": "row_1",
+          "type": "Row",
+          "align": "center",
+          "justify": "spaceBetween",
+          "children": [
+            "name_1",
+            "state_1"
+          ]
+        },
+        {
+          "id": "name_1",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/node_1_name"
+          }
+        },
+        {
+          "id": "state_1",
+          "type": "StatTile",
+          "label": "state",
+          "value": {
+            "$bind": "/node_1_state"
+          },
+          "tone": "good"
+        },
+        {
+          "id": "row_2",
+          "type": "Row",
+          "align": "center",
+          "justify": "spaceBetween",
+          "children": [
+            "name_2",
+            "state_2"
+          ]
+        },
+        {
+          "id": "name_2",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/node_2_name"
+          }
+        },
+        {
+          "id": "state_2",
+          "type": "StatTile",
+          "label": "state",
+          "value": {
+            "$bind": "/node_2_state"
+          },
+          "tone": "good"
+        },
+        {
+          "id": "row_3",
+          "type": "Row",
+          "align": "center",
+          "justify": "spaceBetween",
+          "children": [
+            "name_3",
+            "state_3"
+          ]
+        },
+        {
+          "id": "name_3",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/node_3_name"
+          }
+        },
+        {
+          "id": "state_3",
+          "type": "StatTile",
+          "label": "state",
+          "value": {
+            "$bind": "/node_3_state"
+          },
+          "tone": "good"
+        },
+        {
+          "id": "row_4",
+          "type": "Row",
+          "align": "center",
+          "justify": "spaceBetween",
+          "children": [
+            "name_4",
+            "state_4"
+          ]
+        },
+        {
+          "id": "name_4",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/node_4_name"
+          }
+        },
+        {
+          "id": "state_4",
+          "type": "StatTile",
+          "label": "state",
+          "value": {
+            "$bind": "/node_4_state"
+          },
+          "tone": "good"
+        },
+        {
+          "id": "answer",
+          "type": "Text",
+          "text": {
+            "$bind": "/answer"
+          }
+        }
+      ],
+      "dataModel": {
+        "title": "Run three_cities",
+        "rows": [],
+        "answer": "London is the largest at about 9.5 million, Berlin about 3.75 million, and Paris about 2.06 million. The closest pair is Berlin and Paris, separated by roughly 1.64 million people.",
+        "node_0_name": "answer  \u00b7  answer",
+        "node_0_state": "succeeded",
+        "node_1_name": "distiller  \u00b7  distiller",
+        "node_1_state": "succeeded",
+        "node_2_name": "research_berlin  \u00b7  researcher",
+        "node_2_state": "succeeded",
+        "node_3_name": "research_london  \u00b7  researcher",
+        "node_3_state": "succeeded",
+        "node_4_name": "research_paris  \u00b7  researcher",
+        "node_4_state": "succeeded"
+      }
+    }
+  },
+  "showcase": {
+    "component_count": 20,
+    "distinct_types": 11,
+    "types_used": [
+      "BarChart",
+      "Column",
+      "DataTable",
+      "Divider",
+      "ProgressBar",
+      "Row",
+      "Sparkline",
+      "StatTile",
+      "Tabs",
+      "Text",
+      "Timeline"
+    ],
+    "chart_types": [
+      "BarChart",
+      "ProgressBar",
+      "Sparkline",
+      "Timeline"
+    ],
+    "executable_nodes": 0,
+    "clean": true,
+    "data_model_keys": 24,
+    "surface": {
+      "root": "root",
+      "components": [
+        {
+          "id": "root",
+          "type": "Column",
+          "children": [
+            "title",
+            "kpi_row",
+            "charts_row",
+            "table",
+            "tabs",
+            "div",
+            "tl"
+          ]
+        },
+        {
+          "id": "title",
+          "type": "Text",
+          "variant": "heading",
+          "text": {
+            "$bind": "/kpi_title"
+          }
+        },
+        {
+          "id": "k_papers",
+          "type": "StatTile",
+          "label": "Papers",
+          "value": {
+            "$bind": "/kpi_papers"
+          },
+          "unit": "",
+          "delta": {
+            "$bind": "/d_papers"
+          },
+          "tone": "good"
+        },
+        {
+          "id": "k_chunks",
+          "type": "StatTile",
+          "label": "Semantic chunks",
+          "value": {
+            "$bind": "/kpi_chunks"
+          },
+          "unit": "",
+          "delta": {
+            "$bind": "/d_chunks"
+          },
+          "tone": "neutral"
+        },
+        {
+          "id": "k_words",
+          "type": "StatTile",
+          "label": "Words indexed",
+          "value": {
+            "$bind": "/kpi_words"
+          },
+          "unit": "",
+          "delta": {
+            "$bind": "/d_words"
+          },
+          "tone": "neutral"
+        },
+        {
+          "id": "k_floor",
+          "type": "StatTile",
+          "label": "Below semantic floor",
+          "value": {
+            "$bind": "/kpi_floor"
+          },
+          "unit": "",
+          "delta": {
+            "$bind": "/d_floor"
+          },
+          "tone": "warn"
+        },
+        {
+          "id": "kpi_row",
+          "type": "Row",
+          "align": "stretch",
+          "justify": "spaceBetween",
+          "children": [
+            "k_papers",
+            "k_chunks",
+            "k_words",
+            "k_floor"
+          ]
+        },
+        {
+          "id": "bars",
+          "type": "BarChart",
+          "title": "Chunks per paper",
+          "data": {
+            "$bind": "/chunks_by_paper"
+          },
+          "xKey": "label",
+          "yKey": "value"
+        },
+        {
+          "id": "spark",
+          "type": "Sparkline",
+          "data": {
+            "$bind": "/chunk_spark"
+          },
+          "tone": "good"
+        },
+        {
+          "id": "prog",
+          "type": "ProgressBar",
+          "value": {
+            "$bind": "/index_progress"
+          },
+          "max": 20,
+          "tone": "good"
+        },
+        {
+          "id": "charts_row",
+          "type": "Row",
+          "align": "stretch",
+          "justify": "spaceBetween",
+          "children": [
+            "bars",
+            "spark",
+            "prog"
+          ]
+        },
+        {
+          "id": "table",
+          "type": "DataTable",
+          "columns": "Paper,Chunks,Words,Year",
+          "rows": {
+            "$bind": "/table_rows"
+          },
+          "sortable": true,
+          "filterKey": "Paper"
+        },
+        {
+          "id": "detail_0",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/paper_0_detail"
+          }
+        },
+        {
+          "id": "detail_1",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/paper_1_detail"
+          }
+        },
+        {
+          "id": "detail_2",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/paper_2_detail"
+          }
+        },
+        {
+          "id": "detail_3",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/paper_3_detail"
+          }
+        },
+        {
+          "id": "detail_4",
+          "type": "Text",
+          "variant": "body",
+          "text": {
+            "$bind": "/paper_4_detail"
+          }
+        },
+        {
+          "id": "tabs",
+          "type": "Tabs",
+          "labels": "paper 1,paper 2,paper 3,paper 4,paper 5",
+          "children": [
+            "detail_0",
+            "detail_1",
+            "detail_2",
+            "detail_3",
+            "detail_4"
+          ]
+        },
+        {
+          "id": "tl",
+          "type": "Timeline",
+          "title": "How the graph earned this",
+          "events": {
+            "$bind": "/timeline"
+          }
+        },
+        {
+          "id": "div",
+          "type": "Divider"
+        }
+      ],
+      "dataModel": {
+        "kpi_papers": 5,
+        "kpi_chunks": 19,
+        "kpi_words": 1038,
+        "kpi_floor": 1,
+        "d_papers": "discovered at runtime",
+        "d_chunks": "across 5 papers",
+        "d_words": "~207 per paper",
+        "d_floor": "1 kept without a model call",
+        "chunks_by_paper": [
+          {
+            "label": "ReAct",
+            "value": 5
+          },
+          {
+            "label": "Attention",
+            "value": 4
+          },
+          {
+            "label": "DPO",
+            "value": 4
+          },
+          {
+            "label": "LoRA",
+            "value": 4
+          },
+          {
+            "label": "CoT",
+            "value": 2
+          }
+        ],
+        "chunk_spark": [
+          4,
+          4,
+          5,
+          2,
+          4
+        ],
+        "index_progress": 19,
+        "table_rows": [
+          {
+            "Paper": "ReAct: Reasoning and Acting",
+            "Chunks": 5,
+            "Words": 262,
+            "Year": 2022
+          },
+          {
+            "Paper": "Attention Is All You Need",
+            "Chunks": 4,
+            "Words": 213,
+            "Year": 2017
+          },
+          {
+            "Paper": "Direct Preference Optimization",
+            "Chunks": 4,
+            "Words": 240,
+            "Year": 2023
+          },
+          {
+            "Paper": "LoRA: Low-Rank Adaptation",
+            "Chunks": 4,
+            "Words": 205,
+            "Year": 2021
+          },
+          {
+            "Paper": "Chain-of-Thought Prompting",
+            "Chunks": 2,
+            "Words": 118,
+            "Year": 2022
+          }
+        ],
+        "timeline": [
+          {
+            "seq": 1,
+            "kind": "run_started",
+            "node": "\u2014"
+          },
+          {
+            "seq": 2,
+            "kind": "graph_patched",
+            "node": "\u2014"
+          },
+          {
+            "seq": 3,
+            "kind": "task_started",
+            "node": "list_dir"
+          },
+          {
+            "seq": 4,
+            "kind": "task_succeeded",
+            "node": "list_dir"
+          },
+          {
+            "seq": 5,
+            "kind": "graph_patched",
+            "node": "\u2014"
+          },
+          {
+            "seq": 6,
+            "kind": "task_started",
+            "node": "index_attention"
+          },
+          {
+            "seq": 7,
+            "kind": "task_started",
+            "node": "index_cot"
+          },
+          {
+            "seq": 8,
+            "kind": "task_started",
+            "node": "index_dpo"
+          },
+          {
+            "seq": 9,
+            "kind": "task_succeeded",
+            "node": "index_attention"
+          },
+          {
+            "seq": 10,
+            "kind": "task_started",
+            "node": "index_lora"
+          },
+          {
+            "seq": 11,
+            "kind": "task_succeeded",
+            "node": "index_cot"
+          },
+          {
+            "seq": 12,
+            "kind": "task_started",
+            "node": "index_react"
+          },
+          {
+            "seq": 13,
+            "kind": "task_succeeded",
+            "node": "index_dpo"
+          },
+          {
+            "seq": 14,
+            "kind": "task_succeeded",
+            "node": "index_lora"
+          },
+          {
+            "seq": 15,
+            "kind": "task_succeeded",
+            "node": "index_react"
+          },
+          {
+            "seq": 16,
+            "kind": "graph_patched",
+            "node": "\u2014"
+          }
+        ],
+        "paper_0_title": "ReAct: Reasoning and Acting",
+        "paper_0_detail": "5 semantic chunks over 262 words \u00b7 indexed 2022",
+        "paper_1_title": "Attention Is All You Need",
+        "paper_1_detail": "4 semantic chunks over 213 words \u00b7 indexed 2017",
+        "paper_2_title": "Direct Preference Optimization",
+        "paper_2_detail": "4 semantic chunks over 240 words \u00b7 indexed 2023",
+        "paper_3_title": "LoRA: Low-Rank Adaptation",
+        "paper_3_detail": "4 semantic chunks over 205 words \u00b7 indexed 2021",
+        "paper_4_title": "Chain-of-Thought Prompting",
+        "paper_4_detail": "2 semantic chunks over 118 words \u00b7 indexed 2022",
+        "kpi_title": "Research corpus \u2014 5 papers, live from the S13 index"
+      }
+    }
+  },
+  "agui": {
+    "event_count": 16,
+    "by_type": {
+      "RUN_STARTED": 1,
+      "STATE_DELTA": 4,
+      "STEP_STARTED": 5,
+      "STEP_FINISHED": 5,
+      "RUN_FINISHED": 1
+    },
+    "events": [
+      {
+        "type": "RUN_STARTED",
+        "seq": 1,
+        "source_kind": "run_started"
+      },
+      {
+        "type": "STATE_DELTA",
+        "seq": 2,
+        "source_kind": "graph_patched",
+        "delta": {
+          "op": "graph_patched",
+          "reason": "goal names three independent cities",
+          "trigger": 1
+        }
+      },
+      {
+        "type": "STEP_STARTED",
+        "seq": 3,
+        "source_kind": "task_started",
+        "stepName": "research_london"
+      },
+      {
+        "type": "STEP_STARTED",
+        "seq": 4,
+        "source_kind": "task_started",
+        "stepName": "research_berlin"
+      },
+      {
+        "type": "STEP_STARTED",
+        "seq": 5,
+        "source_kind": "task_started",
+        "stepName": "research_paris"
+      },
+      {
+        "type": "STEP_FINISHED",
+        "seq": 6,
+        "source_kind": "task_succeeded",
+        "stepName": "research_london",
+        "delta": {
+          "op": "add",
+          "path": "/results/research_london",
+          "value": {
+            "city": "London",
+            "population_millions": 9.5,
+            "range": "9.2-9.8",
+            "provider": "gemini_1"
+          }
+        }
+      },
+      {
+        "type": "STEP_FINISHED",
+        "seq": 7,
+        "source_kind": "task_succeeded",
+        "stepName": "research_paris",
+        "delta": {
+          "op": "add",
+          "path": "/results/research_paris",
+          "value": {
+            "city": "Paris",
+            "population_millions": 2.06,
+            "range": "2.05-2.10",
+            "provider": "gemini_3"
+          }
+        }
+      },
+      {
+        "type": "STEP_FINISHED",
+        "seq": 8,
+        "source_kind": "task_succeeded",
+        "stepName": "research_berlin",
+        "delta": {
+          "op": "add",
+          "path": "/results/research_berlin",
+          "value": {
+            "city": "Berlin",
+            "population_millions": 3.75,
+            "range": "3.69-3.78",
+            "provider": "gemini_2"
+          }
+        }
+      },
+      {
+        "type": "STATE_DELTA",
+        "seq": 9,
+        "source_kind": "graph_patched",
+        "delta": {
+          "op": "graph_patched",
+          "reason": "three populations known; compare them",
+          "trigger": 8
+        }
+      },
+      {
+        "type": "STEP_STARTED",
+        "seq": 10,
+        "source_kind": "task_started",
+        "stepName": "distiller"
+      },
+      {
+        "type": "STEP_FINISHED",
+        "seq": 11,
+        "source_kind": "task_succeeded",
+        "stepName": "distiller",
+        "delta": {
+          "op": "add",
+          "path": "/results/distiller",
+          "value": {
+            "closest_pair": [
+              "Berlin",
+              "Paris"
+            ],
+            "gap_millions": 1.64
+          }
+        }
+      },
+      {
+        "type": "STATE_DELTA",
+        "seq": 12,
+        "source_kind": "graph_patched",
+        "delta": {
+          "op": "graph_patched",
+          "reason": "comparison ready; write the answer",
+          "trigger": 11
+        }
+      },
+      {
+        "type": "STEP_STARTED",
+        "seq": 13,
+        "source_kind": "task_started",
+        "stepName": "answer"
+      },
+      {
+        "type": "STEP_FINISHED",
+        "seq": 14,
+        "source_kind": "task_succeeded",
+        "stepName": "answer",
+        "delta": {
+          "op": "add",
+          "path": "/results/answer",
+          "value": {
+            "text": "London is the largest at about 9.5 million, Berlin about 3.75 million, and Paris about 2.06 million. The closest pair is Berlin and Paris, separated by roughly 1.64 million people."
+          }
+        }
+      },
+      {
+        "type": "STATE_DELTA",
+        "seq": 15,
+        "source_kind": "graph_patched",
+        "delta": {
+          "op": "graph_patched",
+          "reason": "completion contract satisfied",
+          "trigger": 14
+        }
+      },
+      {
+        "type": "RUN_FINISHED",
+        "seq": 16,
+        "source_kind": "derived"
+      }
+    ]
+  },
+  "injections": {
+    "all_rejected": true,
+    "all_correct": true,
+    "cases": [
+      {
+        "name": "raw-html-type",
+        "expected_invariant": "catalog",
+        "rejected": true,
+        "invariants_broken": [
+          "catalog"
+        ],
+        "accepted_ids": [
+          "root",
+          "ok"
+        ],
+        "rejections": [
+          {
+            "component_id": "evil",
+            "field": "type",
+            "invariant": "catalog",
+            "reason": "unknown component type 'RawHtml'"
+          }
+        ],
+        "correct": true
+      },
+      {
+        "name": "smuggled-handler",
+        "expected_invariant": "data-not-code",
+        "rejected": true,
+        "invariants_broken": [
+          "data-not-code"
+        ],
+        "accepted_ids": [
+          "root",
+          "ok"
+        ],
+        "rejections": [
+          {
+            "component_id": "evil",
+            "field": "onclick",
+            "invariant": "data-not-code",
+            "reason": "event-handler property is never allowed"
+          }
+        ],
+        "correct": true
+      },
+      {
+        "name": "markup-in-binding",
+        "expected_invariant": "data-not-code",
+        "rejected": true,
+        "invariants_broken": [
+          "data-not-code"
+        ],
+        "accepted_ids": [
+          "root",
+          "ok"
+        ],
+        "rejections": [
+          {
+            "component_id": "evil",
+            "field": "text",
+            "invariant": "data-not-code",
+            "reason": "value carries markup"
+          }
+        ],
+        "correct": true
+      },
+      {
+        "name": "unregistered-action",
+        "expected_invariant": "event",
+        "rejected": true,
+        "invariants_broken": [
+          "event"
+        ],
+        "accepted_ids": [
+          "root",
+          "ok"
+        ],
+        "rejections": [
+          {
+            "component_id": "evil",
+            "field": "onPress",
+            "invariant": "event",
+            "reason": "unregistered action 'transfer_all_funds'"
+          }
+        ],
+        "correct": true
+      }
+    ]
+  },
+  "hitl": {
+    "matching_approve": {
+      "allowed": true,
+      "reason": "approved with matching parameters"
+    },
+    "widened_approve": {
+      "allowed": false,
+      "reason": "approved args differ from the parked parameters; approval is bound to final params"
+    },
+    "reject": {
+      "allowed": true,
+      "reason": "rejected by user"
+    },
+    "safe": true
+  }
+}

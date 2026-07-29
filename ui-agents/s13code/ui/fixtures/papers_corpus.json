@@ -1,0 +1,37 @@
+{
+  "run_id": "papers_corpus",
+  "finished": true,
+  "nodes": {
+    "list_dir": {"id": "list_dir", "skill": "lister", "input": {"dir": "papers/"}, "metadata": {"agent": "local"}, "state": "succeeded", "result": {"found": 5}},
+    "index_attention": {"id": "index_attention", "skill": "indexer", "input": {"file": "attention.txt"}, "metadata": {"agent": "phi4+nomic"}, "state": "succeeded", "result": {"paper": "Attention Is All You Need", "short": "Attention", "chunks": 4, "words": 213, "year": 2017, "below_floor": 0}},
+    "index_cot": {"id": "index_cot", "skill": "indexer", "input": {"file": "cot.txt"}, "metadata": {"agent": "phi4+nomic"}, "state": "succeeded", "result": {"paper": "Chain-of-Thought Prompting", "short": "CoT", "chunks": 2, "words": 118, "year": 2022, "below_floor": 1}},
+    "index_dpo": {"id": "index_dpo", "skill": "indexer", "input": {"file": "dpo.txt"}, "metadata": {"agent": "phi4+nomic"}, "state": "succeeded", "result": {"paper": "Direct Preference Optimization", "short": "DPO", "chunks": 4, "words": 240, "year": 2023, "below_floor": 0}},
+    "index_lora": {"id": "index_lora", "skill": "indexer", "input": {"file": "lora.txt"}, "metadata": {"agent": "phi4+nomic"}, "state": "succeeded", "result": {"paper": "LoRA: Low-Rank Adaptation", "short": "LoRA", "chunks": 4, "words": 205, "year": 2021, "below_floor": 0}},
+    "index_react": {"id": "index_react", "skill": "indexer", "input": {"file": "react.txt"}, "metadata": {"agent": "phi4+nomic"}, "state": "succeeded", "result": {"paper": "ReAct: Reasoning and Acting", "short": "ReAct", "chunks": 5, "words": 262, "year": 2022, "below_floor": 0}}
+  },
+  "edges": [
+    ["list_dir", "index_attention"],
+    ["list_dir", "index_cot"],
+    ["list_dir", "index_dpo"],
+    ["list_dir", "index_lora"],
+    ["list_dir", "index_react"]
+  ],
+  "events": [
+    {"sequence": 1, "kind": "run_started", "node_id": null, "payload": {}},
+    {"sequence": 2, "kind": "graph_patched", "node_id": null, "payload": {"trigger_event": 1, "reason": "must discover files before indexing", "add": ["list_dir"]}},
+    {"sequence": 3, "kind": "task_started", "node_id": "list_dir", "payload": {"skill": "lister", "agent": "local"}},
+    {"sequence": 4, "kind": "task_succeeded", "node_id": "list_dir", "payload": {"found": 5}},
+    {"sequence": 5, "kind": "graph_patched", "node_id": null, "payload": {"trigger_event": 4, "reason": "five papers discovered; index each", "add": ["index_attention", "index_cot", "index_dpo", "index_lora", "index_react"]}},
+    {"sequence": 6, "kind": "task_started", "node_id": "index_attention", "payload": {"skill": "indexer", "agent": "phi4+nomic"}},
+    {"sequence": 7, "kind": "task_started", "node_id": "index_cot", "payload": {"skill": "indexer", "agent": "phi4+nomic"}},
+    {"sequence": 8, "kind": "task_started", "node_id": "index_dpo", "payload": {"skill": "indexer", "agent": "phi4+nomic"}},
+    {"sequence": 9, "kind": "task_succeeded", "node_id": "index_attention", "payload": {"paper": "Attention Is All You Need", "short": "Attention", "chunks": 4, "words": 213, "year": 2017, "below_floor": 0}},
+    {"sequence": 10, "kind": "task_started", "node_id": "index_lora", "payload": {"skill": "indexer", "agent": "phi4+nomic"}},
+    {"sequence": 11, "kind": "task_succeeded", "node_id": "index_cot", "payload": {"paper": "Chain-of-Thought Prompting", "short": "CoT", "chunks": 2, "words": 118, "year": 2022, "below_floor": 1}},
+    {"sequence": 12, "kind": "task_started", "node_id": "index_react", "payload": {"skill": "indexer", "agent": "phi4+nomic"}},
+    {"sequence": 13, "kind": "task_succeeded", "node_id": "index_dpo", "payload": {"paper": "Direct Preference Optimization", "short": "DPO", "chunks": 4, "words": 240, "year": 2023, "below_floor": 0}},
+    {"sequence": 14, "kind": "task_succeeded", "node_id": "index_lora", "payload": {"paper": "LoRA: Low-Rank Adaptation", "short": "LoRA", "chunks": 4, "words": 205, "year": 2021, "below_floor": 0}},
+    {"sequence": 15, "kind": "task_succeeded", "node_id": "index_react", "payload": {"paper": "ReAct: Reasoning and Acting", "short": "ReAct", "chunks": 5, "words": 262, "year": 2022, "below_floor": 0}},
+    {"sequence": 16, "kind": "graph_patched", "node_id": null, "payload": {"trigger_event": 15, "reason": "corpus indexed; completion contract satisfied", "finish": true}}
+  ]
+}

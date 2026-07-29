@@ -1,0 +1,136 @@
+{
+  "provider": "gemini_2",
+  "model": "gemini-3.1-flash-lite",
+  "raw": "{\"root\":\"root\",\"components\":[\n  {\"id\":\"root\",\"type\":\"Column\",\"children\":[\"h\",\"g\",\"bc\",\"dt\"]},\n  {\"id\":\"h\",\"type\":\"Heading\",\"text\":{\"$bind\":\"/title\"}},\n  {\"id\":\"g\",\"type\":\"Grid\",\"cols\":3,\"children\":[\"s1\",\"s2\",\"s3\"]},\n  {\"id\":\"s1\",\"type\":\"StatTile\",\"label\":\"Papers\",\"value\":{\"$bind\":\"/kpi_papers\"}},\n  {\"id\":\"s2\",\"type\":\"StatTile\",\"label\":\"Chunks\",\"value\":{\"$bind\":\"/kpi_chunks\"}},\n  {\"id\":\"s3\",\"type\":\"StatTile\",\"label\":\"Words\",\"value\":{\"$bind\":\"/kpi_words\"}},\n  {\"id\":\"bc\",\"type\":\"BarChart\",\"title\":\"Chunks by Paper\",\"data\":{\"$bind\":\"/chunks_by_paper\"},\"xKey\":\"label\",\"yKey\":\"value\"},\n  {\"id\":\"dt\",\"type\":\"DataTable\",\"columns\":\"Paper,Chunks,Year\",\"rows\":{\"$bind\":\"/table_rows\"}}\n]}",
+  "surface_accepted": {
+    "root": "root",
+    "components": [
+      {
+        "id": "root",
+        "type": "Column",
+        "children": [
+          "h",
+          "g",
+          "bc",
+          "dt"
+        ]
+      },
+      {
+        "id": "h",
+        "type": "Heading",
+        "text": {
+          "$bind": "/title"
+        }
+      },
+      {
+        "id": "g",
+        "type": "Grid",
+        "cols": 3,
+        "children": [
+          "s1",
+          "s2",
+          "s3"
+        ]
+      },
+      {
+        "id": "s1",
+        "type": "StatTile",
+        "label": "Papers",
+        "value": {
+          "$bind": "/kpi_papers"
+        }
+      },
+      {
+        "id": "s2",
+        "type": "StatTile",
+        "label": "Chunks",
+        "value": {
+          "$bind": "/kpi_chunks"
+        }
+      },
+      {
+        "id": "s3",
+        "type": "StatTile",
+        "label": "Words",
+        "value": {
+          "$bind": "/kpi_words"
+        }
+      },
+      {
+        "id": "bc",
+        "type": "BarChart",
+        "title": "Chunks by Paper",
+        "data": {
+          "$bind": "/chunks_by_paper"
+        },
+        "xKey": "label",
+        "yKey": "value"
+      },
+      {
+        "id": "dt",
+        "type": "DataTable",
+        "columns": "Paper,Chunks,Year",
+        "rows": {
+          "$bind": "/table_rows"
+        }
+      }
+    ],
+    "dataModel": {
+      "title": "Research corpus \u2014 composed by Gemini",
+      "kpi_papers": 5,
+      "kpi_chunks": 19,
+      "kpi_words": 1038,
+      "chunks_by_paper": [
+        {
+          "label": "ReAct",
+          "value": 5
+        },
+        {
+          "label": "Attention",
+          "value": 4
+        },
+        {
+          "label": "DPO",
+          "value": 4
+        },
+        {
+          "label": "LoRA",
+          "value": 4
+        },
+        {
+          "label": "CoT",
+          "value": 2
+        }
+      ],
+      "table_rows": [
+        {
+          "Paper": "ReAct: Reasoning and Acting",
+          "Chunks": 5,
+          "Year": 2022
+        },
+        {
+          "Paper": "Attention Is All You Need",
+          "Chunks": 4,
+          "Year": 2017
+        },
+        {
+          "Paper": "Direct Preference Optimization",
+          "Chunks": 4,
+          "Year": 2023
+        },
+        {
+          "Paper": "LoRA: Low-Rank Adaptation",
+          "Chunks": 4,
+          "Year": 2021
+        },
+        {
+          "Paper": "Chain-of-Thought Prompting",
+          "Chunks": 2,
+          "Year": 2022
+        }
+      ]
+    }
+  },
+  "rejections": [],
+  "dangling_child_refs": []
+}

@@ -1,0 +1,81 @@
+# One blueprint, both services — for a combined repo laid out as:
+#
+#   <your-new-repo>/
+#     render.yaml          <- this file, renamed
+#     glc_v3/              <- gateway (Dockerfile already inside)
+#     ui-agents/           <- runtime + UI (Dockerfile already inside)
+#
+# Copy this to the new repo root as `render.yaml`. Both Dockerfiles and both
+# .dockerignore files come along with their folders unchanged; `rootDir` is what
+# tells Render which subfolder is the build context for each service.
+#
+# The real gain over two separate blueprints is the last block: GLC_BASE_URL is
+# resolved from the gateway service instead of being pasted by hand, so the two
+# cannot drift apart or be wired to a stale URL.
+services:
+  # --- the gateway: the only place a provider credential exists ---------------
+  - type: web
+    name: glc-gateway
+    runtime: docker
+    rootDir: glc_v3
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /healthz
+    envVars:
+      - key: GLC_HOST
+        value: 0.0.0.0
+      - key: LLM_ORDER
+        value: gemini
+      # Free-tier Gemini quota is per key AND per model. gemini-2.5-flash is
+      # retired for new keys and 404s; pin one the keys can actually reach.
+      - key: GEMINI_MODEL
+        value: gemini-3.1-flash-lite
+      # Set in the Render dashboard, never in the repo. Each key becomes its own
+      # independently rate-limited provider (gemini_1..N).
+      - key: GEMINI_API_KEY_1
+        sync: false
+      - key: GEMINI_API_KEY_2
+        sync: false
+      - key: GEMINI_API_KEY_3
+        sync: false
+      - key: GEMINI_API_KEY_4
+        sync: false
+      - key: GEMINI_API_KEY_5
+        sync: false
+
+  # --- the runtime + UI: no credentials, calls the gateway over HTTP ----------
+  - type: web
+    name: s14-runtime
+    runtime: docker
+    rootDir: ui-agents
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /healthz
+    # NOT more than one. A turn is two requests — POST /v1/agent/runs then
+    # GET /v1/runs/{id}/composed — and the run lives in app.state.s13_runtime.
+    # Split them across instances and the second returns 404.
+    numInstances: 1
+    disk:
+      name: s14-data
+      mountPath: /data    # graph.sqlite + memory; without it every redeploy
+      sizeGB: 1           # silently starts with an empty history
+    envVars:
+      - key: S13_HOST
+        value: 0.0.0.0
+      - key: S13_DATA_DIR
+        value: /data
+      - key: S13_SANDBOX_ROOT
+        value: /data/sandbox
+      - key: S13_GATEWAY_PROVIDER
+        value: gemini
+      - key: S13_MAX_TOKENS
+        value: "2000"
+      # The monorepo pay-off: resolved from the gateway service at deploy time,
+      # so there is no URL to paste and nothing to go stale. If your Render plan
+      # does not expose `hostport`, replace this block with a plain
+      # `sync: false` entry and set the gateway's URL by hand once.
+      - key: GLC_BASE_URL
+        fromService:
+          type: web
+          name: glc-gateway
+          property: hostport

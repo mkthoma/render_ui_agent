@@ -1,0 +1,236 @@
+{
+  "run_id": "three_cities",
+  "drop_after": 6,
+  "total_agui_events": 16,
+  "events_before_drop": [
+    {
+      "type": "RUN_STARTED",
+      "seq": 1,
+      "source_kind": "run_started"
+    },
+    {
+      "type": "STATE_DELTA",
+      "seq": 2,
+      "source_kind": "graph_patched",
+      "delta": {
+        "op": "graph_patched",
+        "reason": "goal names three independent cities",
+        "trigger": 1
+      }
+    },
+    {
+      "type": "STEP_STARTED",
+      "seq": 3,
+      "source_kind": "task_started",
+      "stepName": "research_london"
+    },
+    {
+      "type": "STEP_STARTED",
+      "seq": 4,
+      "source_kind": "task_started",
+      "stepName": "research_berlin"
+    },
+    {
+      "type": "STEP_STARTED",
+      "seq": 5,
+      "source_kind": "task_started",
+      "stepName": "research_paris"
+    },
+    {
+      "type": "STEP_FINISHED",
+      "seq": 6,
+      "source_kind": "task_succeeded",
+      "stepName": "research_london",
+      "delta": {
+        "op": "add",
+        "path": "/results/research_london",
+        "value": {
+          "city": "London",
+          "population_millions": 9.5,
+          "range": "9.2-9.8",
+          "provider": "gemini_1"
+        }
+      }
+    }
+  ],
+  "partial_state_before_drop": {
+    "results": {
+      "research_london": {
+        "city": "London",
+        "population_millions": 9.5,
+        "range": "9.2-9.8",
+        "provider": "gemini_1"
+      }
+    },
+    "patches": [
+      {
+        "reason": "goal names three independent cities",
+        "trigger": 1
+      }
+    ]
+  },
+  "state_snapshot": {
+    "type": "STATE_SNAPSHOT",
+    "seq": 0,
+    "source_kind": "snapshot",
+    "state": {
+      "results": {
+        "research_london": {
+          "city": "London",
+          "population_millions": 9.5,
+          "range": "9.2-9.8",
+          "provider": "gemini_1"
+        },
+        "research_paris": {
+          "city": "Paris",
+          "population_millions": 2.06,
+          "range": "2.05-2.10",
+          "provider": "gemini_3"
+        },
+        "research_berlin": {
+          "city": "Berlin",
+          "population_millions": 3.75,
+          "range": "3.69-3.78",
+          "provider": "gemini_2"
+        },
+        "distiller": {
+          "closest_pair": [
+            "Berlin",
+            "Paris"
+          ],
+          "gap_millions": 1.64
+        },
+        "answer": {
+          "text": "London is the largest at about 9.5 million, Berlin about 3.75 million, and Paris about 2.06 million. The closest pair is Berlin and Paris, separated by roughly 1.64 million people."
+        }
+      },
+      "patches": [
+        {
+          "reason": "goal names three independent cities",
+          "trigger": 1
+        },
+        {
+          "reason": "three populations known; compare them",
+          "trigger": 8
+        },
+        {
+          "reason": "comparison ready; write the answer",
+          "trigger": 11
+        },
+        {
+          "reason": "completion contract satisfied",
+          "trigger": 14
+        }
+      ]
+    }
+  },
+  "full_replay_state": {
+    "results": {
+      "research_london": {
+        "city": "London",
+        "population_millions": 9.5,
+        "range": "9.2-9.8",
+        "provider": "gemini_1"
+      },
+      "research_paris": {
+        "city": "Paris",
+        "population_millions": 2.06,
+        "range": "2.05-2.10",
+        "provider": "gemini_3"
+      },
+      "research_berlin": {
+        "city": "Berlin",
+        "population_millions": 3.75,
+        "range": "3.69-3.78",
+        "provider": "gemini_2"
+      },
+      "distiller": {
+        "closest_pair": [
+          "Berlin",
+          "Paris"
+        ],
+        "gap_millions": 1.64
+      },
+      "answer": {
+        "text": "London is the largest at about 9.5 million, Berlin about 3.75 million, and Paris about 2.06 million. The closest pair is Berlin and Paris, separated by roughly 1.64 million people."
+      }
+    },
+    "patches": [
+      {
+        "reason": "goal names three independent cities",
+        "trigger": 1
+      },
+      {
+        "reason": "three populations known; compare them",
+        "trigger": 8
+      },
+      {
+        "reason": "comparison ready; write the answer",
+        "trigger": 11
+      },
+      {
+        "reason": "completion contract satisfied",
+        "trigger": 14
+      }
+    ]
+  },
+  "rebuilt_from_snapshot_state": {
+    "results": {
+      "research_london": {
+        "city": "London",
+        "population_millions": 9.5,
+        "range": "9.2-9.8",
+        "provider": "gemini_1"
+      },
+      "research_paris": {
+        "city": "Paris",
+        "population_millions": 2.06,
+        "range": "2.05-2.10",
+        "provider": "gemini_3"
+      },
+      "research_berlin": {
+        "city": "Berlin",
+        "population_millions": 3.75,
+        "range": "3.69-3.78",
+        "provider": "gemini_2"
+      },
+      "distiller": {
+        "closest_pair": [
+          "Berlin",
+          "Paris"
+        ],
+        "gap_millions": 1.64
+      },
+      "answer": {
+        "text": "London is the largest at about 9.5 million, Berlin about 3.75 million, and Paris about 2.06 million. The closest pair is Berlin and Paris, separated by roughly 1.64 million people."
+      }
+    },
+    "patches": [
+      {
+        "reason": "goal names three independent cities",
+        "trigger": 1
+      },
+      {
+        "reason": "three populations known; compare them",
+        "trigger": 8
+      },
+      {
+        "reason": "comparison ready; write the answer",
+        "trigger": 11
+      },
+      {
+        "reason": "completion contract satisfied",
+        "trigger": 14
+      }
+    ]
+  },
+  "checks": {
+    "rebuilt_equals_full_replay": true,
+    "snapshot_is_single_event": true,
+    "no_duplicated_patches": true,
+    "same_result_nodes": true,
+    "drop_was_mid_run": true,
+    "naive_tail_replay_doubles_patches": true
+  },
+  "pass": true
+}

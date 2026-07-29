@@ -1,0 +1,19 @@
+# Never commit credentials. The gateway reads keys from the platform's secret
+# store at run time; .env.example shows the shape and holds no values.
+.env
+.env.*
+!.env.example
+
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Runtime state: graph journal, memory, sandbox. Lives on the mounted disk in
+# deployment and under ~/.s13code locally — never in the repo.
+sandbox/
+*.sqlite
+*.sqlite3
