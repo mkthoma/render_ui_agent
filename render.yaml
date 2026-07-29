@@ -9,9 +9,13 @@
 # .dockerignore files come along with their folders unchanged; `rootDir` is what
 # tells Render which subfolder is the build context for each service.
 #
-# The real gain over two separate blueprints is the last block: GLC_BASE_URL is
-# resolved from the gateway service instead of being pasted by hand, so the two
-# cannot drift apart or be wired to a stale URL.
+# GLC_BASE_URL below is the gateway's public onrender.com hostname, pinned as a
+# literal value. `fromService: {property: hostport}` was tried first for
+# automatic wiring, but its resolved "host:port" wasn't DNS-resolvable from
+# the runtime container (ConnectError: Name or service not known) -- this
+# account/plan doesn't appear to have private networking between the two
+# services. The public hostname is a proven, verified-working fallback: one
+# more network hop than a private link would be, but it actually connects.
 services:
   # --- the gateway: the only place a provider credential exists ---------------
   - type: web
@@ -79,12 +83,8 @@ services:
       # the inbound episode into memory.
       - key: S13_EMBEDDER
         value: deterministic
-      # The monorepo pay-off: resolved from the gateway service at deploy time,
-      # so there is no URL to paste and nothing to go stale. If your Render plan
-      # does not expose `hostport`, replace this block with a plain
-      # `sync: false` entry and set the gateway's URL by hand once.
+      # Public hostname (see the note at the top of this file for why this
+      # isn't `fromService`). Update this if the gateway service is ever
+      # renamed or recreated under a different onrender.com subdomain.
       - key: GLC_BASE_URL
-        fromService:
-          type: web
-          name: glc-gateway
-          property: hostport
+        value: https://glc-gateway.onrender.com

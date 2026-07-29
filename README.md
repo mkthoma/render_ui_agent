@@ -28,9 +28,10 @@ locally, preserved in deployment rather than abandoned at it.
 2. Render → **New → Blueprint** → connect it. Both services are created from
    `render.yaml`.
 3. On **glc-gateway**, set `GEMINI_API_KEY_1` … `GEMINI_API_KEY_5` in the
-   dashboard. Nothing else needs setting: `GLC_BASE_URL` on the runtime resolves
-   from the gateway service automatically.
-4. Open `https://<s14-runtime>.onrender.com/decide`.
+   dashboard. `GLC_BASE_URL` on the runtime is already pinned in `render.yaml`
+   to the gateway's public hostname — update it there if the gateway service
+   is ever renamed.
+4. Open `https://<s14-runtime>.onrender.com/` (redirects to `/decide`).
 
 ### Routes
 
