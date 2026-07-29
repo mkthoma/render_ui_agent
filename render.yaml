@@ -49,7 +49,7 @@ services:
       - key: GEMINI_API_KEY_5
         sync: false
 
-  # --- the runtime + UI: no credentials, calls the gateway over HTTP ----------
+  # --- the runtime + UI: calls the gateway over HTTP, holds its own search key ----------
   - type: web
     name: s14-runtime
     runtime: docker
@@ -88,3 +88,10 @@ services:
       # renamed or recreated under a different onrender.com subdomain.
       - key: GLC_BASE_URL
         value: https://glc-gateway.onrender.com
+      # DuckDuckGo's scraping endpoint (the default, no key needed) is
+      # unreachable from this platform's egress network -- ConnectTimeout on
+      # every research call. Set in the Render dashboard, never in the repo.
+      # Get a free key at tavily.com; unset, web_search() falls back to
+      # DuckDuckGo exactly as before.
+      - key: TAVILY_API_KEY
+        sync: false
