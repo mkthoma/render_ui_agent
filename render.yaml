@@ -19,7 +19,9 @@ services:
     runtime: docker
     rootDir: glc_v3
     dockerfilePath: ./Dockerfile
-    plan: starter
+    # Free tier: no cost, but the service SLEEPS after ~15 min idle and takes
+    # roughly 50s to wake. Hit /healthz on both services before demoing.
+    plan: free
     healthCheckPath: /healthz
     envVars:
       - key: GLC_HOST
@@ -49,16 +51,18 @@ services:
     runtime: docker
     rootDir: ui-agents
     dockerfilePath: ./Dockerfile
-    plan: starter
+    plan: free
     healthCheckPath: /healthz
     # NOT more than one. A turn is two requests — POST /v1/agent/runs then
     # GET /v1/runs/{id}/composed — and the run lives in app.state.s13_runtime.
     # Split them across instances and the second returns 404.
     numInstances: 1
-    disk:
-      name: s14-data
-      mountPath: /data    # graph.sqlite + memory; without it every redeploy
-      sizeGB: 1           # silently starts with an empty history
+    # NO DISK. Render's free instance type does not offer persistent storage, so
+    # S13_DATA_DIR below writes to the container filesystem instead. Runs work
+    # normally while the container lives; the graph journal and memory are LOST
+    # on every restart, redeploy and wake-from-sleep. That is acceptable for a
+    # demo and wrong for anything you want to keep — re-add a disk block and move
+    # to a paid plan if history has to survive.
     envVars:
       - key: S13_HOST
         value: 0.0.0.0

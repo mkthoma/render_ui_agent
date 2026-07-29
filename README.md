@@ -42,19 +42,41 @@ locally, preserved in deployment rather than abandoned at it.
 | `/v1/catalog` | the trusted catalog as JSON |
 | `/healthz` | liveness, used by the platform healthcheck |
 
-## Two constraints that are not preferences
+## Running on the free tier — what you are trading away
+
+The blueprint uses `plan: free` for both services. Two consequences, both real:
+
+**Services sleep after ~15 minutes idle.** Waking takes roughly 50 s, and *then*
+your turn takes another 30–60 s. The first request after a lull looks like a
+hang. Before demoing or recording, wake both:
+
+```bash
+curl -s https://<glc-gateway>.onrender.com/healthz
+curl -s https://<s14-runtime>.onrender.com/healthz
+```
+
+**No persistent disk.** Render's free instance type does not offer one, so
+`S13_DATA_DIR` writes to the container filesystem. Runs work normally while the
+container is alive; the graph journal and memory are **lost on every restart,
+redeploy and wake-from-sleep**. Fine for a demo, wrong for anything you want to
+keep. To fix it, move to a paid plan and restore the `disk:` block:
+
+```yaml
+disk:
+  name: s14-data
+  mountPath: /data
+  sizeGB: 1
+```
+
+## One constraint that is not a preference
 
 **One instance.** A turn is two HTTP requests — `POST /v1/agent/runs`, then
 `GET /v1/runs/{id}/composed` — and the run lives in `app.state.s13_runtime`.
 Route them to different instances and the second returns 404. `numInstances: 1`
-is load-bearing; do not enable autoscaling.
+is load-bearing; do not enable autoscaling on any plan.
 
-**A disk at `/data`.** The graph journal and memory are SQLite. Without the
-mounted volume every redeploy silently starts with an empty history — it looks
-fine until you notice old runs are gone.
-
-Both are why this is a container and not a serverless function; a turn also takes
-10–60 s, which most function timeouts will cut off.
+That, plus a 10–60 s turn, is why this is a container rather than a serverless
+function — most function timeouts would cut a turn off mid-compose.
 
 ## Local development
 
