@@ -21,7 +21,7 @@ import json
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from .agui import run_data_model, state_snapshot, stream_agui
@@ -158,6 +158,12 @@ async def harness_surface():
         "provider": node.get("provider"),
         "model": node.get("model"),
     }
+
+
+@router.get("/", include_in_schema=False)
+async def root():
+    """The bare host URL had no route at all, so it 404'd. Send it to the app."""
+    return RedirectResponse("/decide")
 
 
 @router.get("/decide", response_class=HTMLResponse)

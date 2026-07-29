@@ -16,7 +16,7 @@ from typing import Any
 
 from s13code.core.live_graph import GraphPatch, GraphStore, LiveGraphExecutor, TaskSpec
 from s13code.core.memory import MemoryKind, MemoryRecord, MemoryScope, MemoryStore, Principal, SourceRef
-from s13code.core.memory.embeddings import OllamaNomicEmbedder
+from s13code.core.memory.embeddings import DeterministicEmbedder, OllamaNomicEmbedder
 from s13code.planner import ConstrainedGraphPatchPlanner
 from s13code.tools import fetch_url, sandbox_files, sandbox_path, web_search
 
@@ -272,7 +272,12 @@ class S13Runtime:
         # between those profiles.
         self.root = root or Path(os.getenv("S13_DATA_DIR", str(Path.home() / ".s13code")))
         self.root.mkdir(parents=True, exist_ok=True)
-        self.memory = MemoryStore(self.root / "memory.sqlite", embedder=OllamaNomicEmbedder())
+        # OllamaNomicEmbedder needs a local Ollama process (a student's laptop
+        # has one; a deployed container doesn't). S13_EMBEDDER lets a
+        # container opt into the network-free fallback without changing the
+        # default a local checkout has always run with.
+        embedder = DeterministicEmbedder() if os.getenv("S13_EMBEDDER") == "deterministic" else OllamaNomicEmbedder()
+        self.memory = MemoryStore(self.root / "memory.sqlite", embedder=embedder)
         self.graph = GraphStore(self.root / "graph.sqlite")
 
     def close(self) -> None:

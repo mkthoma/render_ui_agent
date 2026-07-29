@@ -4,7 +4,8 @@ from pathlib import Path
 
 import s13code.routes as agent_route
 import s13code.runtime as runtime_module
-from s13code.core.memory.embeddings import DeterministicEmbedder
+from s13code.core.memory.embeddings import DeterministicEmbedder, OllamaNomicEmbedder
+from s13code.runtime import S13Runtime
 
 
 def _fake_answer(monkeypatch):
@@ -122,3 +123,24 @@ def test_structured_population_uses_distiller_then_validator(app_client, monkeyp
     assert body["graph"]["nodes"]["validate"]["state"] == "succeeded"
     assert body["trace"]["agents"]["distill"]["agent"] == "distiller"
     assert body["trace"]["agents"]["validate"]["agent"] == "structured_validator"
+
+
+def test_default_runtime_still_wires_ollama_embedder(tmp_path, monkeypatch):
+    """A local checkout's behavior must not change: no env var, no surprise."""
+    monkeypatch.delenv("S13_EMBEDDER", raising=False)
+    runtime = S13Runtime(root=tmp_path)
+    try:
+        assert isinstance(runtime.memory.embedder, OllamaNomicEmbedder)
+    finally:
+        runtime.close()
+
+
+def test_s13_embedder_env_var_switches_to_the_network_free_embedder(tmp_path, monkeypatch):
+    """A container with no Ollama process opts in via S13_EMBEDDER=deterministic
+    instead of crashing the first time a run writes an episode to memory."""
+    monkeypatch.setenv("S13_EMBEDDER", "deterministic")
+    runtime = S13Runtime(root=tmp_path)
+    try:
+        assert isinstance(runtime.memory.embedder, DeterministicEmbedder)
+    finally:
+        runtime.close()

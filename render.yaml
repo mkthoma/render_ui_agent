@@ -74,6 +74,11 @@ services:
         value: gemini
       - key: S13_MAX_TOKENS
         value: "2000"
+      # No Ollama process exists in this container. Without this, the first
+      # question asked crashes with a 500 the moment the run tries to embed
+      # the inbound episode into memory.
+      - key: S13_EMBEDDER
+        value: deterministic
       # The monorepo pay-off: resolved from the gateway service at deploy time,
       # so there is no URL to paste and nothing to go stale. If your Render plan
       # does not expose `hostport`, replace this block with a plain

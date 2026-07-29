@@ -1103,6 +1103,14 @@ def test_second_opinion_records_what_the_verdict_needs(client):
     assert "prevDataModel" in html     # turn n's data, for showing what changed
 
 
+def test_bare_root_redirects_to_the_application(client):
+    """The host's own URL had no route and 404'd. It should land people on the
+    actual application rather than making them already know to type /decide."""
+    res = client.get("/", follow_redirects=False)
+    assert res.status_code in (302, 307)
+    assert res.headers["location"] == "/decide"
+
+
 @pytest.mark.parametrize("path", ["/s/gallery", "/gallery", "/gallery/"])
 def test_gallery_is_reachable_at_the_url_people_guess(client, path):
     """/s/gallery is the honest internal shape — the gallery is an ordinary
