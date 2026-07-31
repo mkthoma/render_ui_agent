@@ -705,12 +705,29 @@ function goalFor(text,kind){
          " Context: the original question was "+contextOf(first);
 }
 
+// Free-tier services sleep independently after idling. /decide's own load
+// already fires a wake-ping at the gateway, but a genuinely cold start (~50s)
+// can still lose the race against someone who types fast — the very first
+// fetch below then fails with a connection error or a run that never
+// composed. Rather than surface that as a dead-end failure, retry a bounded
+// number of times with a visible "waking up" message; if the gateway really
+// is just slow to boot, the same request that failed a moment ago succeeds
+// once it is warm.
+const GATEWAY_WAKE_RETRIES=6;
+const GATEWAY_WAKE_DELAY_MS=8000;
+function wait(ms){return new Promise(r=>setTimeout(r,ms));}
+
 async function runTurn(text,kind){
   if(busy)return;busy=true;document.getElementById("ask").disabled=true;
   setStatus("think","composing…", kind==="repair"
     ? " re-researching the claim you marked weak: \""+text+"\""
     : " the agent is writing an interface for: \""+text+"\"");
   const goal=goalFor(text,kind);
+  try{ await attemptTurn(text,goal,0); }
+  finally{ busy=false;document.getElementById("ask").disabled=false; }
+}
+
+async function attemptTurn(text,goal,attempt){
   const t0=Date.now();
   try{
     const res=await fetch(API+"/v1/agent/runs",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -743,8 +760,17 @@ async function runTurn(text,kind){
       ((rep.dangling||[]).length?" · dangling children: "+rep.dangling.join(", "):"")+
       (!rep.drew?" · NOTHING DREW":""));
   }catch(err){
+    if(attempt<GATEWAY_WAKE_RETRIES){
+      const waitS=Math.round(GATEWAY_WAKE_DELAY_MS/1000);
+      setStatus("think","waking the gateway…",
+        " the free-tier gateway may still be starting up — retrying in "+waitS+
+        "s (attempt "+(attempt+1)+" of "+GATEWAY_WAKE_RETRIES+"). last error: "+
+        String(err.message||err));
+      await wait(GATEWAY_WAKE_DELAY_MS);
+      return attemptTurn(text,goal,attempt+1);
+    }
     setStatus("bad","turn failed",String(err.message||err));
-  }finally{busy=false;document.getElementById("ask").disabled=false;}
+  }
 }
 
 function choose(label){if(label)runTurn(label,"choice");}

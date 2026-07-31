@@ -20,7 +20,7 @@ import asyncio
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -166,9 +166,26 @@ async def root():
     return RedirectResponse("/decide")
 
 
+async def _wake_gateway(app) -> None:
+    """Fire-and-forget nudge for a free-tier gateway that may have gone to
+    sleep independently of this service. This deployment splits the gateway
+    (holds every provider credential) from this runtime into two separate
+    Render services that sleep on their own idle timers — visiting this page
+    says nothing to the OTHER one, so a cold gateway previously required
+    manually opening its URL first. This gives it a head start waking up the
+    moment someone loads the app, before they have even finished typing a
+    question. Failure here is silent and non-fatal: it is an optimistic
+    nudge, not a dependency of the page load that requested it.
+    """
+    try:
+        await app.state.gateway.health()
+    except Exception:
+        pass
+
+
 @router.get("/decide", response_class=HTMLResponse)
 @router.get("/decide/", response_class=HTMLResponse)
-async def second_opinion():
+async def second_opinion(request: Request, background_tasks: BackgroundTasks):
     """Second Opinion — the Session 14 UI-only application.
 
     Its own shell rather than an edit of ``/app``: the assignment says "fork it
@@ -179,6 +196,7 @@ async def second_opinion():
     path — ``/v1/runs/{id}/composed`` 404s when a run composed nothing, so a
     failed turn surfaces as an error rather than degrading into prose.
     """
+    background_tasks.add_task(_wake_gateway, request.app)
     path = Path(__file__).parent / "client" / "second_opinion.html"
     if not path.exists():
         raise HTTPException(500, "second opinion shell missing")
