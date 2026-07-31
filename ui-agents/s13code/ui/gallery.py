@@ -28,7 +28,7 @@ DATA_MODEL: dict[str, Any] = {
     "title": "The trusted catalog, drawn",
     "subtitle": "Every component the agent may name, rendered by the real client",
     "body": "Structure and data travel apart. Nothing on this page was authored as markup.",
-    "notice_ok": "All 24 component types rendered from one validated surface.",
+    "notice_ok": "All 27 component types rendered from one validated surface.",
     "notice_warn": "2 of 3 sources loaded; one request timed out.",
     "query": "asyncio best practices",
     "only_peer_reviewed": True,
@@ -87,6 +87,23 @@ DATA_MODEL: dict[str, Any] = {
         {"from": "distill", "to": "surface", "reason": ""},
     ],
     "graph_highlight": "retry",
+    # --- the Arbiter contribution -------------------------------------------
+    "radar_axes": ["Throughput", "Durability", "Ops simplicity", "Latency"],
+    "radar_series": [
+        {"name": "Kafka", "values": [9, 9, 4, 6]},
+        {"name": "RabbitMQ", "values": [6, 7, 7, 7]},
+        {"name": "NATS", "values": [8, 5, 9, 9]},
+    ],
+    "whatif_criteria": [
+        {"key": "latency", "label": "Reduce p99 latency", "weight": 50},
+        {"key": "cost", "label": "Cut cloud spend", "weight": 30},
+        {"key": "oncall", "label": "Improve on-call load", "weight": 20},
+    ],
+    "whatif_options": [
+        {"name": "Reduce p99 latency", "scores": {"latency": 9, "cost": 3, "oncall": 4}},
+        {"name": "Cut cloud spend", "scores": {"latency": 2, "cost": 9, "oncall": 3}},
+        {"name": "Improve on-call load", "scores": {"latency": 4, "cost": 2, "oncall": 9}},
+    ],
 }
 
 
@@ -207,6 +224,17 @@ def build_gallery() -> dict:
          "highlight": {"$bind": "/graph_highlight"}, "fallback": "Timeline"})
     sections.append(_section("Provenance (Session 14)",
                              ["g_ev_row", "g_rungraph"]))
+
+    # Synthesis: the Arbiter contribution. Every component above renders a fact;
+    # these two render a JUDGEMENT across several facts at once, and one of them
+    # lets the reader question that judgement instead of just reading it.
+    add({"id": "g_radar", "type": "TradeoffRadar", "title": "Kafka vs RabbitMQ vs NATS",
+         "axes": {"$bind": "/radar_axes"}, "series": {"$bind": "/radar_series"},
+         "fallback": "DataTable"})
+    add({"id": "g_whatif", "type": "WhatIfSlider", "title": "Which initiative first?",
+         "criteria": {"$bind": "/whatif_criteria"}, "options": {"$bind": "/whatif_options"},
+         "fallback": "DataTable"})
+    sections.append(_section("Synthesis (Arbiter)", ["g_radar", "g_whatif"]))
 
     components.extend(sections)
     components.insert(0, {"id": "gallery_title", "type": "Text", "variant": "heading",

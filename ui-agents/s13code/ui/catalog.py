@@ -10,7 +10,7 @@ The catalog is aligned to A2UI's Basic component set: the 15 layout / text /
 input / container types A2UI Basic already defines are adopted under their real
 A2UI names (``source="a2ui-basic"``). Only the components A2UI Basic genuinely
 lacks — charts, tiles, tables, timelines, notices, and the approval card — are
-kept as clearly labelled custom extensions (``source="custom"``). Twenty-three
+kept as clearly labelled custom extensions (``source="custom"``). Twenty-seven
 types in all; a student can read every one and the validator can prove coverage.
 
 Property kinds:
@@ -249,6 +249,36 @@ COMPONENTS: dict[str, ComponentSpec] = {
                     "whenever /graph_nodes is present and the reader may reasonably ask how the "
                     "answer was reached. Not an ordered list of events (see Timeline): a Timeline "
                     "shows what happened in sequence and cannot show that one step earned another."),
+    # --- Arbiter contribution: synthesis, not just facts (2) -------------------
+    # Every type above shows what IS: a figure, a series, a table of rows. None of
+    # them shows a JUDGEMENT across several things at once against several axes,
+    # and none of them lets the reader question the judgement rather than just
+    # read it. A decision desk that only ever displays facts still leaves the
+    # actual deciding to the reader's own head. These two close that gap.
+    "TradeoffRadar": ComponentSpec("TradeoffRadar", {
+        "title": PropSpec("text"),
+        "axes": PropSpec("binding"),       # [str], in the order every series' values follow
+        "series": PropSpec("binding"),     # [{"name": str, "values": [number, ...]}]
+        "fallback": PropSpec("type_ref", default="DataTable"),
+    }, source="custom",
+        description="Several named things plotted across the SAME several axes at once, so a "
+                    "reader sees where each one wins and loses in a single glance instead of "
+                    "reading cell by cell. Use for a multi-criteria comparison between options "
+                    "(latency, durability, ops burden, ...). Not for one labelled series across "
+                    "categories (see BarChart) and not for plain rows of records with no shared "
+                    "axes to plot (see DataTable)."),
+    "WhatIfSlider": ComponentSpec("WhatIfSlider", {
+        "title": PropSpec("text"),
+        "criteria": PropSpec("binding"),   # [{"key": str, "label": str, "weight": number 0-100}]
+        "options": PropSpec("binding"),    # [{"name": str, "scores": {criterionKey: number}}]
+        "fallback": PropSpec("type_ref", default="DataTable"),
+    }, source="custom",
+        description="A weighted ranking the reader can interrogate: one slider per criterion, "
+                    "an option list re-ranked live, entirely in the client, as a weight moves. Use "
+                    "when the right answer depends on priorities the reader holds, not the agent "
+                    "— a prioritisation call between initiatives, not a settled comparison. Not "
+                    "for a fixed judgement the reader cannot reweigh (see TradeoffRadar) and not "
+                    "for an input the user must submit before anything happens (see Slider)."),
 }
 
 # The closed set of action names a surface may emit. An action the agent did

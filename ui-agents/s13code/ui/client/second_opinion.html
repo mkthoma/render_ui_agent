@@ -328,9 +328,9 @@ function isSafeUrl(u){return typeof u==="string" && !/^\s*(javascript|data|vbscr
 //   * the word before the first name is lowercase, or it gets swallowed into it
 //     ("Compare Postgres" would become one subject).
 const PRESETS = [
-  "Compare the caching layers Redis, Memcached and Dragonfly for session storage in a single-region deployment.",
-  "Should we introduce a service mesh once we hit 12 microservices, or is that premature?",
-  "What are the biggest risks of migrating our monolith to microservices, and how would we mitigate them?",
+  "Our last deploy caused a 20-minute outage from a bad database migration. What process changes would prevent this from happening again?",
+  "We have three initiatives this quarter -- reducing p99 latency, cutting cloud spend, and improving on-call load. Which should we prioritize and why?",
+  "Compare the message queues Kafka, RabbitMQ and NATS for an event-driven platform.",
 ];
 
 // ---- conversation state -----------------------------------------------------
@@ -380,6 +380,8 @@ const R = {
     const d=$("div","dl");d.append(T(resolve(c.delta,x.dm)||""));e.append(l,v,d);return e;},
   EvidenceTile:(c,x)=>evidence(c,x),
   RunGraph:(c,x)=>renderRunGraph(c,x),
+  TradeoffRadar:(c,x)=>renderTradeoffRadar(c,x),
+  WhatIfSlider:(c,x)=>renderWhatIfSlider(c,x),
   Timeline:(c,x)=>{const e=$("div","chart");const t=$("div","ct");t.append(T(c.title||"timeline"));
     const b=$("div");b.style.cssText="display:flex;flex-direction:column;gap:8px;margin-top:4px";
     (resolve(c.events,x.dm)||[]).forEach(ev=>{const r=$("div");r.style.cssText="display:flex;gap:10px;align-items:flex-start;font-size:13.5px";
@@ -541,6 +543,110 @@ function renderRunGraph(c,x){
     [String(n.label||n.id),String(n.state||""),edges.filter(e=>e.from===n.id).map(e=>e.to).join(", ")||"—"]
       .forEach(v=>{const td=$("td");td.append(T(v));tr.append(td);});tab.append(tr);});
   wrap.append(tab);return wrap;
+}
+
+// --- TradeoffRadar: several named things across the SAME axes at once ------
+// A DataTable makes the reader compare cell by cell; a radar polygon per
+// series lets them see where each option wins and loses in one glance. Each
+// axis is normalised against its OWN max across the series being plotted, so
+// an axis measured in raw throughput (thousands) cannot swamp an axis that is
+// a 0-10 ops-burden score — every spoke gets the same visual weight.
+function renderTradeoffRadar(c,x){
+  const axes=(resolve(c.axes,x.dm)||[]).map(String);
+  const series=(resolve(c.series,x.dm)||[]).filter(s=>s&&Array.isArray(s.values));
+  const wrap=$("div","chart");const t=$("div","ct");t.append(T(c.title||"tradeoff"));wrap.append(t);
+  if(!axes.length||!series.length){const p=$("div");p.append(T("no data to plot"));wrap.append(p);return wrap;}
+  const N=axes.length,W=280,H=252,cx=W/2,cy=H/2-4,RAD=Math.min(W,H)/2-42;
+  const ang=i=>-Math.PI/2+i*(2*Math.PI/N);
+  const axisMax=axes.map((_,i)=>Math.max(1,...series.map(s=>+s.values[i]||0)));
+  const pt=(i,v)=>{const r=Math.max(0,Math.min(1,v/axisMax[i]))*RAD,a=ang(i);return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};
+  const ns="http://www.w3.org/2000/svg";const svg=document.createElementNS(ns,"svg");
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.setAttribute("width","100%");svg.setAttribute("height",H);svg.setAttribute("role","img");
+  const titleEl=document.createElementNS(ns,"title");titleEl.textContent=c.title||"tradeoff radar";
+  const descEl=document.createElementNS(ns,"desc");
+  descEl.textContent=series.map(s=>s.name+": "+axes.map((a,i)=>a+"="+s.values[i]).join(", ")).join("; ");
+  svg.setAttribute("aria-labelledby","tr-t tr-d");titleEl.id="tr-t";descEl.id="tr-d";svg.append(titleEl,descEl);
+  axes.forEach((a,i)=>{
+    const [ex,ey]=[cx+RAD*Math.cos(ang(i)),cy+RAD*Math.sin(ang(i))];
+    const line=document.createElementNS(ns,"line");line.setAttribute("x1",cx);line.setAttribute("y1",cy);
+    line.setAttribute("x2",ex);line.setAttribute("y2",ey);
+    line.setAttribute("stroke","var(--rule-strong)");line.setAttribute("stroke-width","1");svg.append(line);
+    const [lx,ly]=[cx+(RAD+18)*Math.cos(ang(i)),cy+(RAD+18)*Math.sin(ang(i))];
+    const lab=document.createElementNS(ns,"text");lab.setAttribute("x",lx);lab.setAttribute("y",ly);
+    lab.setAttribute("font-size","9.5");lab.setAttribute("fill","var(--ink-muted)");lab.setAttribute("text-anchor","middle");
+    lab.setAttribute("font-family","var(--font-mono)");lab.textContent=a.length>16?a.slice(0,15)+"…":a;svg.append(lab);
+  });
+  const PALETTE=["var(--accent)","var(--green)","var(--amber)","var(--red)"];
+  series.forEach((s,si)=>{const col=PALETTE[si%PALETTE.length];
+    const poly=document.createElementNS(ns,"polygon");
+    poly.setAttribute("points",axes.map((_,i)=>pt(i,+s.values[i]||0).join(",")).join(" "));
+    poly.setAttribute("fill",col);poly.setAttribute("fill-opacity","0.14");
+    poly.setAttribute("stroke",col);poly.setAttribute("stroke-width","2");svg.append(poly);});
+  wrap.append(svg);
+  const leg=$("div");leg.style.cssText="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11px;font-family:var(--font-mono)";
+  series.forEach((s,si)=>{const item=$("span");item.style.cssText="display:flex;align-items:center;gap:5px";
+    const sw=$("span");sw.style.cssText="width:9px;height:9px;border-radius:2px;background:"+PALETTE[si%PALETTE.length];
+    item.append(sw,T(s.name));leg.append(item);});
+  wrap.append(leg);
+  // Same accessible-table pattern as RunGraph: visually hidden, fully readable.
+  const tab=$("table");tab.style.cssText="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)";
+  const hr=$("tr");["option",...axes].forEach(h=>{const th=$("th");th.append(T(h));hr.append(th);});tab.append(hr);
+  series.forEach(s=>{const tr=$("tr");[s.name,...axes.map((_,i)=>s.values[i])]
+    .forEach(v=>{const td=$("td");td.append(T(String(v)));tr.append(td);});tab.append(tr);});
+  wrap.append(tab);
+  return wrap;
+}
+
+// --- WhatIfSlider: a ranking the reader can reweigh, not just read ---------
+// Every other data-viz component in this catalog is a fixed rendering of a
+// fixed data model. This one lets a weight move and the ranking below it
+// recompute IMMEDIATELY, entirely in the browser: no action, no round trip,
+// no new run. The insight is in watching the order change, not in any single
+// frozen ranking, so the interaction has to feel instant to mean anything.
+function renderWhatIfSlider(c,x){
+  const criteria=(resolve(c.criteria,x.dm)||[]).filter(cr=>cr&&cr.key);
+  const options=(resolve(c.options,x.dm)||[]).filter(o=>o&&o.name&&o.scores);
+  const wrap=$("div","chart");const t=$("div","ct");t.append(T(c.title||"what-if"));wrap.append(t);
+  if(!criteria.length||!options.length){const p=$("div");p.append(T("no data to weigh"));wrap.append(p);return wrap;}
+  const weights={};criteria.forEach(cr=>{weights[cr.key]=Math.max(0,Math.min(100,+cr.weight||50));});
+  const sliders=$("div");sliders.style.cssText="display:flex;flex-direction:column;gap:11px;margin:10px 0 4px";
+  const ranked=$("div");ranked.style.cssText="display:flex;flex-direction:column;gap:7px;margin-top:6px";
+
+  function rerank(){
+    const totals=options.map(o=>({name:o.name,
+      total:criteria.reduce((sum,cr)=>sum+(weights[cr.key]/100)*(+o.scores[cr.key]||0),0)}));
+    totals.sort((a,b)=>b.total-a.total);
+    const max=Math.max(...totals.map(t=>t.total),1e-9);
+    ranked.textContent="";
+    totals.forEach((tt,i)=>{
+      const row=$("div");row.style.cssText="display:flex;align-items:center;gap:10px;font-size:13px";
+      const rank=$("span");rank.style.cssText="font-family:var(--font-mono);font-size:11px;width:18px;"+
+        "color:"+(i===0?"var(--accent)":"var(--ink-muted)");rank.append(T("#"+(i+1)));
+      const name=$("span");name.style.cssText="flex:0 0 auto;min-width:120px;color:"+(i===0?"var(--ink)":"var(--ink-body)")+
+        ";font-weight:"+(i===0?"650":"400");name.append(T(tt.name));
+      const bar=$("div");bar.style.cssText="flex:1;height:8px;border-radius:999px;background:var(--surface-alt);"+
+        "border:1px solid var(--rule);overflow:hidden";
+      const fill=$("div");fill.style.cssText="height:100%;width:"+Math.max(2,tt.total/max*100)+"%;"+
+        "background:"+(i===0?"linear-gradient(90deg,var(--accent),var(--accent-2))":"var(--rule-strong)");
+      bar.append(fill);row.append(rank,name,bar);ranked.append(row);
+    });
+  }
+
+  criteria.forEach(cr=>{
+    const row=$("div");row.style.cssText="display:flex;align-items:center;gap:10px";
+    const lab=$("span");lab.style.cssText="flex:0 0 auto;min-width:150px;font-size:12px;"+
+      "font-family:var(--font-mono);color:var(--ink-muted)";lab.append(T(cr.label||cr.key));
+    const inp=document.createElement("input");inp.type="range";inp.min="0";inp.max="100";
+    inp.value=String(weights[cr.key]);inp.style.flex="1";
+    const val=$("span");val.style.cssText="width:30px;text-align:right;font-family:var(--font-mono);"+
+      "font-size:12px;color:var(--ink-muted)";val.append(T(String(weights[cr.key])));
+    inp.addEventListener("input",()=>{weights[cr.key]=+inp.value;val.textContent=inp.value;rerank();});
+    row.append(lab,inp,val);sliders.append(row);
+  });
+
+  rerank();
+  wrap.append(sliders,ranked);
+  return wrap;
 }
 
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
@@ -801,7 +907,7 @@ document.querySelectorAll(".theme-switch .swatch").forEach(b=>{
 
 // ---- boot -------------------------------------------------------------------
 const presetBar=document.getElementById("presets");
-const PRESET_LABELS=["Redis · Memcached · Dragonfly","Service mesh timing?","Monolith → microservices risk"];
+const PRESET_LABELS=["Deploy postmortem","Quarterly prioritization","Kafka · RabbitMQ · NATS"];
 PRESETS.forEach((p,i)=>{const b=$("button");b.append(T(PRESET_LABELS[i]||("preset "+(i+1))));
   b.title=p;b.onclick=()=>{document.getElementById("prompt").value=p;};presetBar.append(b);});
 document.getElementById("prompt").value=PRESETS[0];

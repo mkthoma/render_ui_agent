@@ -873,6 +873,7 @@ def test_look_alike_components_name_each_other_as_the_thing_they_are_not():
         ("List", "Card"), ("Card", "List"),
         ("Row", "Column"), ("Column", "Row"),
         ("ProgressBar", "BarChart"), ("InputChoice", "Button"),
+        ("TradeoffRadar", "BarChart"), ("WhatIfSlider", "TradeoffRadar"),
     ]
     for component, rival in rivals:
         assert rival in COMPONENTS[component].description, \
@@ -880,15 +881,15 @@ def test_look_alike_components_name_each_other_as_the_thing_they_are_not():
 
 
 def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
-    """25 types: 15 A2UI-Basic + 10 custom, each tagged with its source.
+    """27 types: 15 A2UI-Basic + 12 custom, each tagged with its source.
 
-    Grown from 23 by the Session 14 contribution, deliberately: this assertion
-    exists so the catalog stays closed and every addition is a reviewed act.
-    It is tightened to the new exact set rather than relaxed to ``>=`` —
-    loosening it to accommodate our own component would remove the guarantee
-    that component depends on.
+    Grown from 23 by the Session 14 contribution, then from 25 by the Arbiter
+    contribution, deliberately: this assertion exists so the catalog stays
+    closed and every addition is a reviewed act. It is tightened to the new
+    exact set rather than relaxed to ``>=`` — loosening it to accommodate our
+    own component would remove the guarantee that component depends on.
     """
-    assert len(COMPONENTS) == 25
+    assert len(COMPONENTS) == 27
     by_source: dict[str, set[str]] = {}
     for name, spec in COMPONENTS.items():
         assert spec.source in ("a2ui-basic", "custom"), name
@@ -904,6 +905,10 @@ def test_catalog_is_the_realigned_a2ui_basic_plus_custom_set():
         # Two kinds of warrant: the evidence behind a value, and the shape of
         # the run that produced it.
         "EvidenceTile", "RunGraph",
+        # Arbiter — the catalog could render facts, never a synthesised
+        # judgement, and never one the reader could question. A weighted,
+        # multi-axis comparison, and a ranking the reader can reweigh live.
+        "TradeoffRadar", "WhatIfSlider",
     }
     # The removed types are truly gone.
     for gone in ("Heading", "Grid", "Table", "Tab", "Badge", "LineChart"):
