@@ -69,8 +69,31 @@ def _looks_like_js_url(value) -> bool:
     return isinstance(value, str) and bool(_JS_URL.match(value))
 
 
-def validate_surface(surface: dict) -> ValidationResult:
-    """Validate one surface (``{root, components:[...]}``) against the catalog."""
+def _resolve_pointer(data_model: dict, pointer: str):
+    """A minimal JSON Pointer reader: /a/b/0 -> data_model['a']['b'][0].
+
+    Returns None on any miss (unknown key, index, or non-container in the
+    path) rather than raising -- an unresolved pointer is a "can't check it"
+    case for the caller, not a validator crash.
+    """
+    node = data_model
+    for part in pointer.split("/")[1:]:
+        if isinstance(node, dict):
+            node = node.get(part)
+        elif isinstance(node, list) and part.lstrip("-").isdigit() and 0 <= int(part) < len(node):
+            node = node[int(part)]
+        else:
+            return None
+    return node
+
+
+def validate_surface(surface: dict, data_model: dict | None = None) -> ValidationResult:
+    """Validate one surface (``{root, components:[...]}``) against the catalog.
+
+    ``data_model`` is optional and additive: when supplied, a bindable text
+    prop's resolved value is checked for markup too, not just its shape.
+    Every existing caller that omits it keeps exactly its prior behavior.
+    """
     accepted: list[dict] = []
     rejections: list[Rejection] = []
     components = surface.get("components", [])
@@ -116,6 +139,18 @@ def validate_surface(surface: dict) -> ValidationResult:
             # render time. Structure and data travel apart — a text prop carries
             # structure, so it must be a scalar.
             if prop.kind == "text" and isinstance(value, (dict, list)):
+                well_formed_bind = (isinstance(value, dict) and set(value) == {"$bind"}
+                                     and isinstance(value.get("$bind"), str)
+                                     and bool(_POINTER.match(value["$bind"])))
+                if prop.bindable and well_formed_bind:
+                    if data_model is not None:
+                        resolved = _resolve_pointer(data_model, value["$bind"])
+                        if _looks_like_markup(resolved):
+                            rejections.append(Rejection(cid, field_name, Invariant.DATA_NOT_CODE,
+                                                         "bound value carries markup"))
+                            bad = True
+                            break
+                    continue  # accepted: a bindable text prop resolves like any binding prop
                 reason = (
                     "text property must be a literal string, not a binding"
                     if isinstance(value, dict) and "$bind" in value
@@ -180,6 +215,13 @@ def validate_surface(surface: dict) -> ValidationResult:
                     break
 
         if not bad:
+            # Degrade-gracefully is a harness guarantee, not a hope: a model
+            # that remembers to name a fallback and one that doesn't render
+            # identically on an older client. New dict, not a mutation of the
+            # caller's -- surface["components"] may be read again after this.
+            for field_name, prop in spec.props.items():
+                if prop.kind == "type_ref" and prop.default and field_name not in comp:
+                    comp = {**comp, field_name: prop.default}
             accepted.append(comp)
 
     return ValidationResult(accepted=accepted, rejections=rejections)

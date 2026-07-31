@@ -45,6 +45,21 @@ from dataclasses import dataclass, field
 class PropSpec:
     kind: str  # text | binding | enum | ref | action | number | bool
     values: tuple[str, ...] = ()  # for enum
+    # A "text" prop is normally literal-only: the client renders it via
+    # document.createTextNode, so a bound value is exactly as safe as a
+    # literal one, but most text props are structural references (a chart's
+    # xKey, a table's filterKey, an image's src — checked separately for
+    # safe-URL-ness) where "the model points at a data value" is a category
+    # error, not a feature. bindable=True opts a specific display-label prop
+    # into accepting {"$bind": "/pointer"} too; unset, behavior is exactly
+    # what it always was.
+    bindable: bool = False
+    # For a "type_ref" prop (fallback): the older type to degrade to when the
+    # model omits fallback, which it does often enough that "the model always
+    # remembers" is not a plan. The validator fills this in on any accepted
+    # component that has a default and left the field out, so degrade-gracefully
+    # is a harness guarantee rather than a hope.
+    default: str | None = None
 
 
 @dataclass(frozen=True)
@@ -126,7 +141,7 @@ COMPONENTS: dict[str, ComponentSpec] = {
     }, source="a2ui-basic",
         description="A local date-and-time picker bound to the data model."),
     "Button": ComponentSpec("Button", {
-        "label": PropSpec("text"), "onPress": PropSpec("action"),
+        "label": PropSpec("text", bindable=True), "onPress": PropSpec("action"),
     }, source="a2ui-basic",
         description="A tappable control emitting exactly one registered action. The only way a "
                     "surface changes anything. Use for choices the user makes."),
@@ -209,18 +224,23 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "confidence": _CONFIDENCE,
         "sources": PropSpec("binding"),     # [{"title": str, "url": str}]
         "dissent": PropSpec("binding"),     # {"value": ..., "source": ...} | None
-        "fallback": PropSpec("type_ref"),   # older clients draw this instead
+        "fallback": PropSpec("type_ref", default="StatTile"),   # older clients draw this instead
     }, source="custom",
-        description="One claim shown together with the evidence behind it: the value, how well "
-                    "corroborated it is, the sources that support it, and any conflicting "
-                    "figure. Use whenever a displayed value came from research rather than from "
-                    "the user. Not for a bare number with no provenance (see StatTile)."),
+        description="One SHORT claim shown together with the evidence behind it: a figure, a name, "
+                    "or a one-line finding, plus how well corroborated it is, the sources that "
+                    "support it, and any conflicting figure. The value is a tile-sized fragment, "
+                    "not a passage: a number, a short phrase, at most one sentence. Use whenever "
+                    "a displayed value came from research rather than from the user. Not for a "
+                    "bare number with no provenance (see StatTile). Not for a paragraph, a list of "
+                    "points, or any multi-sentence explanation, however factual — that is prose, "
+                    "and prose belongs in Text or a Card wrapping Text, not squeezed into a tile "
+                    "built to hold one fact."),
     "RunGraph": ComponentSpec("RunGraph", {
         "title": PropSpec("text"),
         "nodes": PropSpec("binding"),       # [{"id": str, "label": str, "state": str}]
         "edges": PropSpec("binding"),       # [{"from": str, "to": str, "reason": str}]
         "highlight": PropSpec("binding"),   # one node id to ring
-        "fallback": PropSpec("type_ref"),
+        "fallback": PropSpec("type_ref", default="Timeline"),
     }, source="custom",
         description="The run's own shape: every step taken, which step fed which, and the state "
                     "each ended in. EVERY answer was produced by a run, so this is available on "

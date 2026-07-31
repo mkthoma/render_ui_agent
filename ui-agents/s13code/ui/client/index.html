@@ -116,7 +116,7 @@ const RENDERERS = {
   DateTime:(c,ctx)=>field(c,()=>{const i=$("input");i.type="datetime-local";i.value=resolve(c.value,ctx.dm)??"";
     i.oninput=()=>{if(c.value&&c.value.$bind)setPointer(ctx.dm,c.value.$bind,i.value);};return i;}),
   Button:(c,ctx)=>{const b=$("button","");b.className="";b.style.cssText="border:1px solid var(--rule-strong);background:var(--surface);border-radius:8px;padding:6px 14px;font-weight:600;cursor:pointer";
-    b.append(text(c.label));b.onclick=()=>emitAction(c.onPress&&c.onPress.action,{});return b;},
+    b.append(text(resolve(c.label,ctx.dm)));b.onclick=()=>emitAction(c.onPress&&c.onPress.action,{});return b;},
   Tabs:(c,ctx)=>renderTabs(c,ctx),
   Modal:(c,ctx)=>{const e=$("div","Modal");const tag=$("div","mtag");tag.append(text((resolve(c.open,ctx.dm)?"modal · open":"modal · preview")));
     const h=$("div","mt");h.append(text(c.title||""));e.append(tag,h);kids(c,ctx,e);return e;},
@@ -205,11 +205,23 @@ function renderRunGraph(c,ctx){
     st.setAttribute("font-family","var(--font-mono)");st.setAttribute("fill","var(--ink-muted)");
     st.textContent=String(n.state||"");g.append(st);
     // The trace line: what the step was ABOUT, not just which worker ran it.
+    // A hard slice(0,30) with no ellipsis cut mid-word ("composing th") and
+    // looked like missing/broken content rather than a deliberately shortened
+    // line. Word-boundary truncation plus "…" makes the shortening legible;
+    // the nested <title> (same pattern the edges already use for `reason`)
+    // puts the FULL text one hover away instead of nowhere at all.
     if(n.detail){const dt=document.createElementNS(ns,"text");
       dt.setAttribute("x",p.x+14);dt.setAttribute("y",p.y+57);dt.setAttribute("font-size","9");
       dt.setAttribute("font-family","var(--font-mono)");dt.setAttribute("fill","var(--ink-muted)");
       dt.setAttribute("opacity","0.85");
-      dt.textContent=String(n.detail).slice(0,30);g.append(dt);}
+      const full=String(n.detail),budget=29;
+      let shown=full;
+      if(full.length>budget){
+        const cut=full.slice(0,budget),lastSpace=cut.lastIndexOf(" ");
+        shown=(lastSpace>0?cut.slice(0,lastSpace):cut)+"…";
+        const dtt=document.createElementNS(ns,"title");dtt.textContent=full;dt.append(dtt);
+      }
+      dt.append(document.createTextNode(shown));g.append(dt);}
     svg.append(g);});
   wrap.append(svg);
   // Screen readers get the graph as DATA, not as a shape: role="img" + title +
@@ -238,7 +250,8 @@ function renderEvidence(c,ctx){
   // is not there. When nothing could be attributed, report what IS true:
   // sources were found, no figure was stated.
   const noFigure = (val==null || val==="");
-  f.append(text((noFigure?"no figure stated":meta.w)+" · "+srcs.length+" source"+(srcs.length===1?"":"s")));
+  const confWord = noFigure?"no figure stated":meta.w;
+  f.append(text(srcs.length?confWord+" · "+srcs.length+" source"+(srcs.length===1?"":"s"):confWord));
   e.append(l,v,f);
   e.setAttribute("role","group");
   e.setAttribute("aria-label",String(c.label)+", "+String(val==null?"no value":val)+", "+meta.w+

@@ -154,7 +154,7 @@ function evidence(c,x){
   const val=resolve(c.value,x.dm), srcs=resolve(c.sources,x.dm)||[], dis=resolve(c.dissent,x.dm);
   const l=$("div","lab");l.append(T(c.label));
   const v=$("div","val");v.append(T((val==null?"—":val)+(c.unit?" "+c.unit:"")));
-  const f=$("div","dl");f.append(T(meta.w+" · "+srcs.length+" source"+(srcs.length===1?"":"s")));
+  const f=$("div","dl");f.append(T(srcs.length?meta.w+" · "+srcs.length+" source"+(srcs.length===1?"":"s"):meta.w));
   e.append(l,v,f);
   e.setAttribute("role","group");
   e.setAttribute("aria-label",String(c.label)+", "+String(val==null?"no value":val)+", "+meta.w+", "+srcs.length+" sources");
@@ -173,6 +173,21 @@ function evidence(c,x){
 }
 
 function kids(c,x,e){for(const id of (c.children||[])){const ch=x.byId[id];if(ch)e.append(node(ch,x));}}
+// A real failure: hopping RunGraph -> Timeline by reusing the same props drew
+// a title and an EMPTY body. Timeline reads c.events; RunGraph has no such
+// prop, only nodes/edges, so (resolve(c.events,dm)||[]) was always []. The
+// fallback existed to save the content, and instead threw it away silently.
+// Shape-incompatible hops need a translation, not a type-name swap; this is
+// the one pair the catalog currently has, so it is the one case handled.
+function hoppedProps(c,x){
+  const hopped=Object.assign({},c,{type:c.fallback});
+  if(c.type==="RunGraph"&&c.fallback==="Timeline"&&!hopped.events){
+    const graphNodes=resolve(c.nodes,x.dm)||[];
+    hopped.events=graphNodes.map(n=>({time:n.label||n.id||"",
+      label:[n.state,n.detail].filter(Boolean).join(" — ")||"—"}));
+  }
+  return hopped;
+}
 // Catalog-ahead-of-client degradation: a component may declare a `fallback`
 // naming an older catalog type to draw when this file has no renderer for it.
 // The viewer loses the richer widget, never the information. Exactly ONE hop.
@@ -180,7 +195,7 @@ function node(c,x,hop){
   const f=R[c.type];
   let el;
   if(f) el=f(c,x);
-  else if(c.fallback&&R[c.fallback]&&!hop) return node(Object.assign({},c,{type:c.fallback}),x,1);
+  else if(c.fallback&&R[c.fallback]&&!hop) return node(hoppedProps(c,x),x,1);
   else{const s=$("div");s.style.cssText="color:var(--red-ink);font-family:var(--font-mono);font-size:11px";s.append(T("[skipped "+c.type+"]"));return s;}
   // Name it for the morph. Derived from (type, label|title) so the SAME logical
   // component keeps its identity across turns even though the tree is rebuilt.

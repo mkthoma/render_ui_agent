@@ -55,16 +55,24 @@ TASK = ("Research the current population of London, Berlin and Paris, "
 
 
 def _prompt_never_names_the_component() -> dict:
-    """Read compose_surface's own source and prove the name does not appear.
+    """Read compose_surface's own source and prove the name does not appear
+    anywhere that could reach the model before it responds.
 
     A claim of 'unprompted' that rests on the author's memory is worth nothing;
-    this reads the shipped function body at run time.
+    this reads the shipped function body at run time. The window is bounded at
+    the outbound gateway call, not the end of the function: compose_surface
+    also guarantees EvidenceTile/RunGraph are present when the model omits
+    them, and that code runs strictly AFTER the model's response, referencing
+    the name as harness bookkeeping rather than telling the model anything.
+    Reading past that point would mistake honest post-hoc code for prompt
+    leakage.
     """
     from s13code import runtime as runtime_module
 
     source = inspect.getsource(runtime_module)
     start = source.index("async def compose_surface")
-    end = source.index("# --- end S14 additive", start)
+    call_marker = "body = await _gateway_surface_call(json.dumps(instruction), system)"
+    end = source.index(call_marker, start) + len(call_marker)
     body = source[start:end]
     return {
         "checked_chars": len(body),

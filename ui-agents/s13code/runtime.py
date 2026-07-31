@@ -30,11 +30,36 @@ TextLLM = Callable[[str, str], Awaitable[dict[str, Any]]]
 # Reversible: delete the tagged call sites below to restore the plain behaviour.
 
 # A run of named entities the user wants looked up: "A, B and C" / "A, B, C" /
-# "A, B, and C" (Oxford comma). Two or more capitalised items. This is how a
+# "A, B, and C" (Oxford comma). Two or more items. This is how a
 # compose-a-dashboard-of-X-Y-Z prompt fans out — with NO domain nouns baked in.
+#
+# Only the FIRST item (and its own capitalised continuation, e.g. "New York")
+# must be capitalised: that is the signal this is a named list at all, not an
+# arbitrary comma-separated phrase in ordinary prose ("in depth, on its own
+# terms, for someone weighing this"). A real failure once that much was
+# fixed: "Compare between Databricks, azure and aws sagemaker" capitalises
+# one of three names because a person typed it casually, not because "azure"
+# and "aws sagemaker" are any less a name than "Databricks" — requiring EVERY
+# item capitalised meant the whole match failed and a three-way comparison
+# got zero research fan-out.
+#
+# A comma-joined item may start lowercase, but exactly one word: "azure" not
+# "azure ml services". A first attempt let it continue for up to two more
+# words, excluding some obvious sentence words ("for", "the", ...) — but that
+# list always has one more gap, and a bare "and"-joined item made it worse:
+# "Find the populations of London, Paris, Berlin and tell me which two are
+# closest" swallowed "tell" as a bogus fourth entity, because in English
+# "and" is genuinely ambiguous between "one more list item" and "now here is
+# the instruction" — a comma essentially never is. So the bare "and X" branch
+# (no comma before it — the common, non-Oxford "A, B and C") stays STRICT,
+# capitalised only, exactly as it always was: "Databricks, azure and aws
+# sagemaker" now yields two of three subjects rather than zero, and a stray
+# lowercase word after a bare "and" cannot be mistaken for a third. Losing a
+# casually-typed final item is a smaller failure than gaining a fictitious
+# one.
 _ENTITY_LIST = re.compile(
     r"\b([A-Z][\w.&-]+(?:\s+[A-Z][\w.&-]+)*"
-    r"(?:\s*,\s*(?:and\s+)?[A-Z][\w.&-]+(?:\s+[A-Z][\w.&-]+)*"
+    r"(?:\s*,\s*(?:and\s+)?[A-Za-z][\w.&-]*"
     r"|\s+and\s+[A-Z][\w.&-]+(?:\s+[A-Z][\w.&-]+)*)+)"
 )
 # A general request to build a user interface (not one specific domain of one).
@@ -901,11 +926,17 @@ class S13Runtime:
                 for added in (payload.get("add") or []):
                     if str(added).endswith("_retry"):
                         corrective_node = str(added)
-            # The graph is SELF-REFERENTIAL: this snapshot is taken while the
-            # compose step is running, so that node's state is honestly "running"
-            # — it is the step drawing the very graph you are looking at, and it
-            # cannot have succeeded yet. Reporting it as succeeded would be a lie;
-            # leaving it bare reads like a hang. Say which it is.
+            # The graph is SELF-REFERENTIAL: this snapshot is taken from INSIDE
+            # the compose step, before it has returned, so the store's own
+            # record for that node still honestly says "running" at the moment
+            # this loop runs. But there is no live-streaming view of this data —
+            # a client only ever sees it via GET /v1/runs/{id}/composed, which
+            # is unreachable until compose_surface has already returned. So by
+            # the time anyone looks at it, "running" is stale, not honest: the
+            # one way this graph reaches a screen at all is that step having
+            # already succeeded. Displaying "running" forever after delivery
+            # reads as a hang for a step that, from the viewer's vantage point,
+            # is always already done.
             # A trace worth reading: what each step was ABOUT, not just which
             # worker ran it. The subject it researched, how many sources it came
             # back with, and whether it superseded an earlier attempt — the
@@ -919,18 +950,35 @@ class S13Runtime:
                 subject = str(node_input.get("subject") or "").strip()
                 hits = node_result.get("hits") or []
                 bits: list[str] = [str(node["skill"])]
+                # Which provider actually answered, and how long it took: the
+                # two things a reader asks after "what happened" is answered by
+                # the rest of this line. Provider is only present on nodes that
+                # called an LLM; duration is recorded for every node that has
+                # finished (see GraphStore.record_outcome).
+                provider = node_result.get("provider")
+                if provider:
+                    bits.append(str(provider))
+                duration_ms = node.get("duration_ms")
+                if duration_ms is not None:
+                    bits.append(f"{duration_ms / 1000:.1f}s" if duration_ms >= 1000 else f"{duration_ms:.0f}ms")
                 if hits:
                     bits.append(f"{len(hits)} source{'' if len(hits) == 1 else 's'}")
                 if node_input.get("corrective_for"):
                     bits.append(f"corrects {node_input['corrective_for']}")
                 if node_result.get("insufficient"):
                     bits.append("no usable evidence")
+                # This node's own "running" state is honest at the instant this
+                # loop runs (see the comment above this block), but stale the
+                # instant a client can ever see it: reaching a client at all
+                # proves this step already succeeded.
+                state = node["state"]
                 if node_id == task.id:
+                    state = "succeeded"
                     bits.append("composing this view")
                 graph_nodes.append({
                     "id": node_id,
                     "label": f"{node_id} · {subject}" if subject else node_id,
-                    "state": node["state"],
+                    "state": state,
                     "detail": " · ".join(bits),
                 })
             data_model["graph_nodes"] = graph_nodes
@@ -1114,8 +1162,10 @@ class S13Runtime:
                       '{"id":"body","type":"Text","variant":"body","text":{"$bind":"/summary"}}  '
                       '{"id":"tabs","type":"Tabs","labels":"One,Two","children":["p0","p1"]}. '
                       "Use ONLY the component types and props named in the catalog. Every DATA value a component "
-                      'shows MUST be a binding {"$bind":"/pointer"} into the dataModel; a Button/Card/Tabs '
-                      "label/title and column names may be literal UI strings. An onPress action MUST be one of the "
+                      'shows MUST be a binding {"$bind":"/pointer"} into the dataModel; a Card/Tabs label/title '
+                      "and column names are UI chrome and must be literal strings, never a binding. Button.label "
+                      "may be either — a literal for a fixed choice, or a binding when the button's text is itself "
+                      "part of the answer (e.g. naming a subject the data produced). An onPress action MUST be one of the "
                       "registered actions (use \"request_data\" for choices); never invent an action, component "
                       "type, prop, event handler, URL, or markup. children/labels reference component ids. "
                       "Prefer the RICHEST fitting component for each piece of data, NEVER one big Text blob: a "
@@ -1162,7 +1212,8 @@ class S13Runtime:
             raw = body.get("text", "")
             surface = _extract_surface(raw)
             proposed = surface.get("components", []) if isinstance(surface, dict) else []
-            validation = validate_surface(surface if isinstance(surface, dict) else {"components": []})
+            validation = validate_surface(surface if isinstance(surface, dict) else {"components": []},
+                                          data_model=data_model)
             # --- provenance is guaranteed, not requested -----------------------
             # The model composes the ANSWER; the harness guarantees the WARRANT.
             # Selection from the catalog is genuinely the model's judgement, and
@@ -1210,10 +1261,20 @@ class S13Runtime:
             # comparison produces none — so a run composed a rich surface with no
             # Button in it and the conversation died at turn one.
             #
-            # Whatever the run actually researched is a subject worth drilling
-            # into, so that becomes the offer. Labels come from real outcomes; the
-            # action is the registered `request_data`, never an invented one.
+            # Three sources, in order of how grounded the label is: a subject the
+            # run actually researched, a choice the model explicitly offered, or —
+            # the case a plain "compare X vs Y vs Z" always has and the other two
+            # miss — the subject headings the model itself organized the answer
+            # into. The action is the registered `request_data`, never invented.
             tappable = [str(item["label"]) for item in outcomes if str(item.get("label") or "").strip()]
+            if not tappable:
+                tappable = [str(choice.get("label") or "").strip()
+                            for choice in (data_model.get("choices") or [])
+                            if str(choice.get("label") or "").strip()]
+            if not tappable:
+                tappable = [str(section.get("heading") or "").strip()
+                            for section in (content_structured.get("sections") or [])
+                            if str(section.get("heading") or "").strip()]
             if tappable and "Button" not in composed_types:
                 button_ids = []
                 for index, label in enumerate(tappable[:6]):
@@ -1233,7 +1294,7 @@ class S13Runtime:
 
             # Whatever the harness added goes through the same wall as the model's
             # own output — a component this code emits is not privileged.
-            validation = validate_surface({"root": root_id, "components": accepted})
+            validation = validate_surface({"root": root_id, "components": accepted}, data_model=data_model)
 
             accepted_ids = {comp.get("id") for comp in validation.accepted}
             dangling = sorted({child for comp in validation.accepted

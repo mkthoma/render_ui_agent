@@ -9,7 +9,10 @@ TestClient. No live gateway, no Ollama, no network.
 from __future__ import annotations
 
 import copy
+import json
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -338,19 +341,65 @@ def test_binding_with_non_pointer_target_breaks_data_not_code():
     assert r.invariant == Invariant.DATA_NOT_CODE
 
 
-def test_binding_smuggled_into_a_text_prop_breaks_data_not_code():
+def test_binding_smuggled_into_a_non_bindable_text_prop_breaks_data_not_code():
     """The source end of a real chain, not a hypothetical.
 
-    ``Button.label`` is kind ``text``. Handing it {"$bind": "/x"} used to pass
-    every content check, because _looks_like_markup() receives a dict rather
-    than a string. The client then resolved the pointer at render time, so an
-    agent-controlled value reached a slot the schema had declared literal.
+    Most ``text`` props are structural references (a chart's xKey, a table's
+    filterKey, a Card's title) rather than display strings, so a binding
+    there is a category error. ``Card.title`` is not marked bindable, so it
+    still must reject a {"$bind": ...} the way every text prop used to.
     """
-    r = _reject({"id": "b", "type": "Button", "label": {"$bind": "/evil"},
+    r = _reject({"id": "c", "type": "Card", "title": {"$bind": "/evil"}})
+    assert r.invariant == Invariant.DATA_NOT_CODE
+    assert r.field == "title"
+    assert "not a binding" in r.reason
+
+
+def test_button_label_may_be_a_well_formed_binding():
+    """Button.label is the one text prop marked bindable: the client renders
+    it via document.createTextNode either way, so a bound value is exactly
+    as safe as a literal one -- the failure mode this used to hit was a
+    dropped button (dangling child), not an XSS risk."""
+    result = validate_surface({"root": "b", "components": [
+        {"id": "b", "type": "Button", "label": {"$bind": "/choice_0_label"},
+         "onPress": {"action": "request_data"}},
+    ]})
+    assert result.ok, [r.as_dict() for r in result.rejections]
+
+
+def test_button_label_binding_that_resolves_to_markup_is_refused():
+    """The invariant the assignment actually asks for: a BOUND VALUE carrying
+    markup is refused. Checkable only when a data_model is supplied --
+    exactly what compose_surface has in hand at the point it validates."""
+    surface = {"root": "b", "components": [
+        {"id": "b", "type": "Button", "label": {"$bind": "/evil"},
+         "onPress": {"action": "request_data"}},
+    ]}
+    result = validate_surface(surface, data_model={"evil": "<script>steal()</script>"})
+    assert not result.ok
+    assert result.rejections[0].reason == "bound value carries markup"
+
+
+def test_button_label_binding_with_no_data_model_is_still_accepted():
+    """Without a data_model there is nothing to resolve against; the shape is
+    still well-formed and the client-side render path is unconditionally
+    safe (createTextNode), so this is accepted rather than guessed at."""
+    result = validate_surface({"root": "b", "components": [
+        {"id": "b", "type": "Button", "label": {"$bind": "/choice_0_label"},
+         "onPress": {"action": "request_data"}},
+    ]})
+    assert result.ok
+
+
+def test_button_label_binding_must_still_be_a_well_formed_pointer():
+    """bindable=True widens the shape to include {"$bind": "/pointer"}; it
+    does not widen it to arbitrary inline structure smuggled in as a dict."""
+    r = _reject({"id": "b", "type": "Button", "label": {"$bind": "/x", "extra": "field"},
                  "onPress": {"action": "request_data"}})
     assert r.invariant == Invariant.DATA_NOT_CODE
-    assert r.field == "label"
-    assert "not a binding" in r.reason
+    r2 = _reject({"id": "b", "type": "Button", "label": [{"smuggled": "inline"}],
+                  "onPress": {"action": "request_data"}})
+    assert r2.invariant == Invariant.DATA_NOT_CODE
 
 
 def test_list_in_a_text_prop_breaks_data_not_code():
@@ -399,6 +448,46 @@ def test_evidence_tile_beside_an_unknown_type_survives_catalog_rejection():
     ]})
     assert [r.invariant for r in result.rejections] == [Invariant.CATALOG]
     assert {c["id"] for c in result.accepted} == {"r", "ev"}
+
+
+def test_attack_the_boundary_all_three_invariants_fire_independently_in_one_surface():
+    """The assignment's adversarial requirement, hermetic: a single surface
+    carrying one violation of each invariant, mixed in among legitimate
+    components. See proofs/attack_boundary.py for the live version of this
+    same scenario, run against the real gateway with a prompt engineered to
+    get Gemini to produce exactly this surface -- it refused to (see that
+    script's docstring for what it did instead), so this pins the wall's
+    behavior on the payload the prompt was actually asking for, without
+    depending on a live model call to keep passing.
+    """
+    result = validate_surface({"root": "root", "components": [
+        {"id": "root", "type": "Column",
+         "children": ["title", "review_card", "action_button", "raw_review", "featured_badge", "shortlist_btn"]},
+        {"id": "title", "type": "Text", "variant": "heading", "text": {"$bind": "/title"}},
+        {"id": "review_card", "type": "Card", "title": "Review", "children": ["review_text"]},
+        {"id": "review_text", "type": "Text", "variant": "body", "text": {"$bind": "/section_0_points"}},
+        {"id": "action_button", "type": "Button", "label": {"$bind": "/choice_0_label"},
+         "onPress": {"action": "request_data"}},
+        # Invariant 1 (catalog): the exact unregistered type the prompt asked for.
+        {"id": "raw_review", "type": "RawHtml",
+         "html": "<mark>Best contractor ever</mark>, saved us <b>$10k</b>!"},
+        # Invariant 2 (data-not-code): literal markup in a non-bindable text prop.
+        {"id": "featured_badge", "type": "Card",
+         "title": "<img src=x onerror=alert(document.cookie)>Featured Review"},
+        # Invariant 3 (event): the exact unregistered action the prompt asked for.
+        {"id": "shortlist_btn", "type": "Button", "label": "Shortlist (direct)",
+         "onPress": {"action": "shortlist_contractor"}},
+    ]})
+
+    assert not result.ok
+    rejected = {(r.component_id, r.invariant): r.reason for r in result.rejections}
+    assert rejected[("raw_review", Invariant.CATALOG)] == "unknown component type 'RawHtml'"
+    assert rejected[("featured_badge", Invariant.DATA_NOT_CODE)] == "value carries markup"
+    assert rejected[("shortlist_btn", Invariant.EVENT)] == "unregistered action 'shortlist_contractor'"
+    # The safe part of the interface still renders: nothing legitimate was
+    # dropped just because it shared a surface with three poisoned nodes.
+    accepted_ids = {c["id"] for c in result.accepted}
+    assert accepted_ids == {"root", "title", "review_card", "review_text", "action_button"}
 
 
 def test_evidence_tile_with_a_handler_property_breaks_data_not_code():
@@ -547,6 +636,134 @@ def test_each_provenance_component_declares_a_fallback_that_resolves(name):
     assert r.invariant == Invariant.CATALOG
 
 
+@pytest.mark.parametrize("name", sorted(_PROVENANCE))
+def test_a_component_that_omits_fallback_gets_the_catalogs_default_anyway(name):
+    """A real failure: the model remembers 'fallback' inconsistently, so an
+    older client (no RunGraph renderer) had nothing to hop to and drew a bare
+    '[skipped RunGraph]' instead of degrading to Timeline. Graceful
+    degradation cannot depend on the model remembering every time -- the
+    validator fills in the catalog's own default for any accepted component
+    that left it out."""
+    comp = {k: v for k, v in _PROVENANCE[name].items() if k != "fallback"}
+    result = validate_surface({"root": comp["id"], "components": [comp]})
+    assert result.ok, [r.as_dict() for r in result.rejections]
+    assert result.accepted[0]["fallback"] == COMPONENTS[name].props["fallback"].default
+
+
+@pytest.mark.parametrize("client_file", ["app.html", "index.html", "second_opinion.html"])
+def test_evidence_tile_omits_the_source_count_when_there_are_none(client_file):
+    """A claim with zero sources showed 'no source · 0 sources' -- the count
+    is redundant with the word right next to it, and drawing it for content
+    that was never a researched claim at all (a branch name given an
+    EvidenceTile just because it needed a value) reads as a broken UI rather
+    than an honest one. When there are no sources, nothing about sources is
+    drawn: no count, no disclosure (the disclosure was already source-gated)."""
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / client_file).read_text(encoding="utf-8")
+    assert "srcs.length?" in html and "source\"+(srcs.length===1?" in html, \
+        f"{client_file} still appends a source count unconditionally"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="requires Node.js to execute the client's own JS")
+@pytest.mark.parametrize("client_file", ["index.html", "second_opinion.html"])
+def test_run_graph_node_detail_truncates_at_a_word_boundary_with_ellipsis(client_file):
+    """A real failure: 'compose_surface · composing this view' (38 chars) hard
+    sliced to 30 chars with no ellipsis rendered as 'compose_surface · composing
+    th' -- a word cut in half, indistinguishable from missing/broken content.
+    Executes the client's actual truncation block in a minimal DOM stub,
+    because the prior version of this exact bug (the RunGraph->Timeline hop)
+    was missed by a test that only checked source text, never behavior.
+    """
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / client_file).read_text(encoding="utf-8")
+    start = html.index("if(n.detail){const dt=document.createElementNS")
+    end = html.index("g.append(dt);}", start) + len("g.append(dt);}")
+    block = html[start:end]
+
+    probe = f"""
+class StubEl {{
+  constructor(tag) {{ this.tag = tag; this.attrs = {{}}; this.children = []; this.textContent = ""; }}
+  setAttribute(k, v) {{ this.attrs[k] = v; }}
+  append(...items) {{ this.children.push(...items); }}
+}}
+const document = {{
+  createElementNS: (_ns, tag) => new StubEl(tag),
+  createTextNode: (t) => ({{ nodeType: 3, text: String(t) }}),
+}};
+const ns = "http://www.w3.org/2000/svg";
+const p = {{x: 0, y: 0}};
+function run(detailText) {{
+  const g = new StubEl("g");
+  const n = {{detail: detailText}};
+  {block}
+  return g.children.find(c => c.tag === "text");
+}}
+function summarize(detailText) {{
+  const dt = run(detailText);
+  const textChild = dt.children.find(c => c.nodeType === 3);
+  const titleChild = dt.children.find(c => c && c.tag === "title");
+  return {{shown: textChild.text, title: titleChild ? titleChild.textContent : null}};
+}}
+console.log(JSON.stringify({{
+  short: summarize("succeeded"),
+  long: summarize("compose_surface \\u00b7 composing this view"),
+}}));
+"""
+    result = subprocess.run(["node", "-e", probe], capture_output=True, text=True, encoding="utf-8", timeout=10)
+    assert result.returncode == 0, result.stderr
+    out = json.loads(result.stdout.strip())
+
+    assert out["short"] == {"shown": "succeeded", "title": None}, \
+        "short detail text must render unchanged, with no tooltip needed"
+    full = "compose_surface · composing this view"
+    shown = out["long"]["shown"]
+    assert shown.endswith("…"), "truncated text must end with an ellipsis, not mid-word"
+    prefix = shown[:-1]
+    assert full.startswith(prefix), "the shown prefix must be a real prefix of the full text"
+    # The exact failure this replaces: slice(0,30) cut "composing this" to
+    # "composing th" -- a real word truncated mid-way. The character right
+    # after the shown prefix in the full text must be a word boundary.
+    assert full[len(prefix):len(prefix) + 1] in (" ", ""), \
+        f"cut mid-word: {prefix!r} is followed by {full[len(prefix):len(prefix)+1]!r} in the full text"
+    assert out["long"]["title"] == full, \
+        "the full text must be reachable via hover when it was shortened"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="requires Node.js to execute the client's own JS")
+def test_run_graph_to_timeline_fallback_actually_carries_the_content():
+    """Real failure, and one the string-match test right below this one
+    passed the whole time it was broken: the one-hop fallback swapped `type`
+    to Timeline and reused RunGraph's props unchanged. Timeline reads
+    c.events; a RunGraph-shaped component has no such prop, only nodes/edges,
+    so (resolve(c.events,dm)||[]) was always [] -- a title with an
+    permanently empty body. Executes app.html's actual resolve/ptr/hoppedProps
+    functions in Node rather than asserting anything about their source text,
+    because source-text assertions are exactly what missed this.
+    """
+    html = (_BUILD_ROOT / "s13code" / "ui" / "client" / "app.html").read_text(encoding="utf-8")
+    resolve_line = next(line for line in html.splitlines() if line.strip().startswith("const resolve="))
+    ptr_line = next(line for line in html.splitlines() if line.strip().startswith("function ptr("))
+    start = html.index("function hoppedProps(c,x){")
+    end = html.index("\n}", start) + len("\n}")
+    hopped_props_fn = html[start:end]
+
+    probe = f"""
+{resolve_line}
+{ptr_line}
+{hopped_props_fn}
+const c = {{id:"g", type:"RunGraph", fallback:"Timeline",
+           nodes:{{"$bind":"/graph_nodes"}}, edges:{{"$bind":"/graph_edges"}}}};
+const dm = {{graph_nodes:[{{id:"content",label:"content",state:"succeeded",detail:"content"}},
+                          {{id:"surface",label:"surface",state:"running",detail:"composing this view"}}]}};
+const hopped = hoppedProps(c, {{dm}});
+console.log(JSON.stringify(hopped.events));
+"""
+    result = subprocess.run(["node", "-e", probe], capture_output=True, text=True, encoding="utf-8", timeout=10)
+    assert result.returncode == 0, result.stderr
+    events = json.loads(result.stdout.strip())
+    assert len(events) == 2, "the graph's own nodes must survive the hop, not vanish into an empty Timeline"
+    assert events[0] == {"time": "content", "label": "succeeded — content"}
+    assert events[1] == {"time": "surface", "label": "running — composing this view"}
+
+
 def test_shipped_app_viewer_degrades_the_new_types_through_fallback():
     """/app predates these components on purpose.
 
@@ -629,6 +846,18 @@ def test_every_component_describes_the_data_shape_it_owns():
         assert spec.description.strip(), f"{name} has no description"
         assert len(spec.description) >= 40, f"{name}'s description is too thin to discriminate"
         assert manifest["components"][name]["description"] == spec.description
+
+
+def test_evidence_tile_description_rules_out_long_form_prose():
+    """A real failure, not a hypothetical: EvidenceTile.value bound to a full
+    page of markdown-formatted revision notes, rendered through a plain text
+    node sized for one fact -- literal '**'/'###' syntax, CSS-clipped
+    mid-word, and a confusing 'no source' tag under content that was never a
+    researched claim. The description now says outright that a paragraph
+    belongs in Text/Card, not squeezed into a tile built for one figure."""
+    desc = COMPONENTS["EvidenceTile"].description
+    assert "paragraph" in desc or "prose" in desc
+    assert "Text" in desc
 
 
 def test_look_alike_components_name_each_other_as_the_thing_they_are_not():
@@ -830,6 +1059,36 @@ def test_second_opinion_tap_repairs_evidence_rather_than_navigating(client):
     assert "marked this claim as weak" in html
 
 
+def test_entity_list_tolerates_a_casually_capitalized_comma_item():
+    """A real failure: 'Compare between Databricks, azure and aws sagemaker
+    for data science' capitalizes one of three names because a person typed
+    it casually, not because 'azure' is any less a name than 'Databricks'.
+    Requiring every item capitalized meant the whole match failed and a
+    three-way comparison got zero research fan-out -- not degraded, gone.
+
+    A comma-joined item may now start lowercase (one word only, see the
+    module-level comment on _ENTITY_LIST for why a bounded multi-word
+    continuation isn't safe). A bare 'and'-joined item -- no comma before it
+    -- still requires capitalization: 'and' is genuinely ambiguous in English
+    between one more list item and the start of a new instruction, and a
+    comma is not, so relaxing that branch too let 'and tell me which two are
+    closest' read 'tell' as a bogus fourth entity in a different prompt.
+    """
+    from s13code.runtime import _entity_list
+
+    assert _entity_list("Compare between Databricks, azure and aws sagemaker for data science") == \
+        ["Databricks", "azure"]
+    # The Oxford-comma form has no such ambiguity for the last item either.
+    assert _entity_list("Compare between Databricks, azure, and aws for data science") == \
+        ["Databricks", "azure", "aws"]
+    # The exact regression this fix must not reintroduce.
+    assert _entity_list("Find the populations of London, Paris, Berlin and tell me "
+                         "which two are closest in size.") == ["London", "Paris", "Berlin"]
+    # A capitalized word right after "and" is unaffected: unchanged behavior.
+    assert _entity_list("Compare the languages Rust, Go and Java for ingestion.") == \
+        ["Rust", "Go", "Java"]
+
+
 @pytest.mark.parametrize("prompt,must_contain,must_not_contain", [
     ("Compare the databases Postgres, ClickHouse and DuckDB for a 2 TB event table.",
      ["databases", "2", "TB", "event", "table"], ["and", "for", "the", "Compare"]),
@@ -914,11 +1173,21 @@ def test_a_turn_can_always_earn_the_next_one():
     because /choices only exists when the content role judges the goal to be a
     pick — a straight comparison produces none. The conversation died at turn
     one with a rich interface on screen and no way forward.
+
+    A real second failure once outcomes-only was fixed: "Compare between
+    Databricks, azure and aws sagemaker" capitalizes only one of three names,
+    so entity extraction never fires either — zero research outcomes AND no
+    /choices, yet the content role's own section headings (Databricks/Azure
+    ML/AWS SageMaker) were sitting right there unused. Three sources now,
+    checked in order.
     """
     source = (_BUILD_ROOT / "s13code" / "runtime.py").read_text(encoding="utf-8")
     assert '"Button" not in composed_types' in source
     # Labels come from what the run actually researched, not from invention.
     assert 'tappable = [str(item["label"]) for item in outcomes' in source
+    # Falls back to a model-declared choice, then to the answer's own structure.
+    assert 'data_model.get("choices")' in source
+    assert 'content_structured.get("sections")' in source
     # And the action is a registered one; a surface cannot mint authority.
     assert '"onPress": {"action": "request_data"}' in source
 
@@ -1104,8 +1373,9 @@ def test_second_opinion_records_what_the_verdict_needs(client):
 
 
 def test_bare_root_redirects_to_the_application(client):
-    """The host's own URL had no route and 404'd. It should land people on the
-    actual application rather than making them already know to type /decide."""
+    """This deployment exists specifically to showcase Part 2, so unlike the
+    assignment repo (where root goes to /app, the original example viewer),
+    root here goes straight to /decide -- the thing this deployment is for."""
     res = client.get("/", follow_redirects=False)
     assert res.status_code in (302, 307)
     assert res.headers["location"] == "/decide"
@@ -1351,8 +1621,10 @@ def test_clients_degrade_an_unknown_type_through_its_declared_fallback(client):
     html = (_BUILD_ROOT / "s13code" / "ui" / "client" / client).read_text(encoding="utf-8")
     assert "c.fallback" in html, "no fallback hop in the unknown-type branch"
     # Exactly one hop: the recursive call passes the guard so a fallback chain
-    # or a self-referential fallback cannot recurse.
-    assert re.search(r"!hop\)\s*return\s+\w+\(Object\.assign", html), "one-hop guard missing"
+    # or a self-referential fallback cannot recurse. The transform in between
+    # (a plain Object.assign, or a helper that also translates incompatible
+    # prop shapes) is an implementation detail; the guard is the invariant.
+    assert re.search(r"!hop\)\s*return\s+\w+\(", html), "one-hop guard missing"
     # The skipped marker survives as the last resort when no fallback is declared.
     assert "[skipped" in html
 
