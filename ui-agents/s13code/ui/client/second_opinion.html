@@ -29,6 +29,7 @@
   --green:#34D399;--green-soft:rgba(52,211,153,.14);--green-ink:#6EE7B7;
   --amber:#FBBF24;--amber-soft:rgba(251,191,36,.14);--amber-ink:#FCD34D;
   --red:#F87171;--red-soft:rgba(248,113,113,.14);--red-ink:#FCA5A5;
+  --chart-1:var(--accent);--chart-2:var(--green);--chart-3:var(--amber);--chart-4:var(--red);
   --glow:0 0 0 1px var(--accent-soft),0 0 24px -8px var(--accent);
 }
 /* --- Ember: warm near-black, amber + coral ------------------------------- */
@@ -40,6 +41,7 @@
   --green:#A3E635;--green-soft:rgba(163,230,53,.14);--green-ink:#BEF264;
   --amber:#FCD34D;--amber-soft:rgba(252,211,77,.14);--amber-ink:#FDE68A;
   --red:#F43F5E;--red-soft:rgba(244,63,94,.14);--red-ink:#FB7185;
+  --chart-1:var(--accent);--chart-2:var(--green);--chart-3:var(--amber);--chart-4:var(--red);
   --glow:0 0 0 1px var(--accent-soft),0 0 24px -8px var(--accent);
 }
 /* --- Terminal: true black, phosphor green + magenta ---------------------- */
@@ -51,6 +53,12 @@
   --green:#39F08C;--green-soft:rgba(57,240,140,.14);--green-ink:#7CFCB0;
   --amber:#FFD166;--amber-soft:rgba(255,209,102,.14);--amber-ink:#FFE29B;
   --red:#FF5C5C;--red-soft:rgba(255,92,92,.14);--red-ink:#FF8A8A;
+  /* --accent and --green are the SAME phosphor green here, by design (a
+     monochrome-terminal palette with magenta as the sole accent break) --
+     so a chart's "distinct series colours" set can't just reuse the two
+     brightest tokens the way the other themes do. --accent-2 (magenta)
+     stands in for --green's slot here only. */
+  --chart-1:var(--accent);--chart-2:var(--accent-2);--chart-3:var(--amber);--chart-4:var(--red);
   --glow:0 0 0 1px var(--accent-soft),0 0 26px -6px var(--accent);
 }
 /* --- Aurora: pale lavender-mint, deep violet + magenta (light theme) ----- */
@@ -62,6 +70,7 @@
   --green:#0D9488;--green-soft:rgba(13,148,136,.12);--green-ink:#0F766E;
   --amber:#B45309;--amber-soft:rgba(180,83,9,.12);--amber-ink:#92400E;
   --red:#BE123C;--red-soft:rgba(190,18,60,.10);--red-ink:#9F1239;
+  --chart-1:var(--accent);--chart-2:var(--green);--chart-3:var(--amber);--chart-4:var(--red);
   --glow:0 0 0 1px var(--accent-soft),0 0 20px -10px var(--accent);
 }
 
@@ -456,7 +465,11 @@ function evidence(c,x){
 // node's rank is the longest path from any source, which puts every edge in the
 // left-to-right direction. Drawn with createElementNS; every label is a text
 // node and the edge reason goes to aria-label, never into markup.
-const STATE_COLOUR={succeeded:"var(--green)",running:"var(--accent)",pending:"var(--rule-strong)",
+// running uses --accent-2, not --accent: the terminal theme sets --accent and
+// --green to the SAME phosphor green by design, which made a "running" node
+// and a "succeeded" node draw with the identical left-edge colour there --
+// the one state distinction a run trace most needs to keep visible.
+const STATE_COLOUR={succeeded:"var(--green)",running:"var(--accent-2)",pending:"var(--rule-strong)",
                     failed:"var(--red)",waiting:"var(--amber)",cancelled:"var(--amber)"};
 function rankNodes(ids,edges){
   const out={},indeg={};ids.forEach(i=>{out[i]=[];indeg[i]=0;});
@@ -615,7 +628,12 @@ function renderTradeoffRadar(c,x){
     lab.setAttribute("font-size","9.5");lab.setAttribute("fill","var(--ink-muted)");lab.setAttribute("text-anchor","middle");
     lab.setAttribute("font-family","var(--font-mono)");lab.textContent=a.length>16?a.slice(0,15)+"…":a;svg.append(lab);
   });
-  const PALETTE=["var(--accent)","var(--green)","var(--amber)","var(--red)"];
+  // Dedicated per-theme tokens, not the status colours reused elsewhere: the
+  // terminal theme's --accent and --green are the SAME phosphor green by
+  // design, so a palette built from semantic status tokens picked the same
+  // colour for two of three series there. --chart-1..4 are chosen per theme
+  // to actually be mutually distinct as a SET (see the theme blocks above).
+  const PALETTE=["var(--chart-1)","var(--chart-2)","var(--chart-3)","var(--chart-4)"];
   series.forEach((s,si)=>{const col=PALETTE[si%PALETTE.length];
     const poly=document.createElementNS(ns,"polygon");
     poly.setAttribute("points",axes.map((_,i)=>pt(i,+s.values[i]||0).join(",")).join(" "));
