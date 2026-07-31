@@ -1310,7 +1310,8 @@ def test_content_role_is_asked_to_attribute_every_figure_it_states():
 
 
 def test_second_opinion_presets_take_the_path_that_produces_evidence(client):
-    """A preset that cannot fill /claims is a preset that cannot show the app.
+    """A "Compare" preset that cannot fill /claims is a preset that cannot show
+    the app's evidence path.
 
     Regression for a real mistake: the first three presets were prose questions
     ("should we move from Postgres to ClickHouse?"). Those route to the
@@ -1320,13 +1321,15 @@ def test_second_opinion_presets_take_the_path_that_produces_evidence(client):
 
     Only the entity fan-out produces sourced claims, and it needs a
     comma-separated list of capitalised names, mid-sentence, preceded by a
-    lowercase word.
+    lowercase word. The presets now deliberately mix ONE such prompt with ONE
+    plain decision question specifically to demonstrate the other path — that
+    second preset is asserted separately below, not held to this invariant.
     """
     from s13code.runtime import _entity_list, _work_intent
 
     html = client.get("/decide").text
     presets = re.findall(r'^\s*"(Compare[^"]+)",\s*$', html, re.MULTILINE)
-    assert len(presets) >= 3, f"expected the shipped presets, found {presets}"
+    assert len(presets) >= 1, f"expected at least one entity-comparison preset, found {presets}"
 
     for prompt in presets:
         mode, frontier = _work_intent(prompt, "ui")
@@ -1337,6 +1340,26 @@ def test_second_opinion_presets_take_the_path_that_produces_evidence(client):
             # A trailing '.' or a swallowed leading verb becomes the tile's label.
             assert not entity.endswith("."), f"{prompt!r} yields subject {entity!r} (list ends the sentence)"
             assert len(entity.split()) == 1, f"{prompt!r} yields subject {entity!r} (word before it is capitalised)"
+
+
+def test_second_opinion_has_a_preset_on_the_single_goal_path_too(client):
+    """The presets deliberately include one plain decision question alongside
+    the entity-comparison preset above, so a visitor can see BOTH composed
+    shapes the app can produce without typing anything: the research fan-out
+    (Compare A and B ...) and the single-goal path (content -> surface, no
+    researcher nodes, no EvidenceTile). This pins the second shape down the
+    same way the test above pins the first."""
+    from s13code.runtime import _entity_list, _work_intent
+
+    html = client.get("/decide").text
+    presets = re.findall(r'^\s*"([^"]+)",\s*$', html, re.MULTILINE)
+    single_goal = [p for p in presets if not p.startswith("Compare")]
+    assert single_goal, f"expected a non-Compare preset for the single-goal path, found {presets}"
+
+    for prompt in single_goal:
+        mode, _frontier = _work_intent(prompt, "ui")
+        assert mode == "compose_answer", f"{prompt!r} routes to {mode}, not the single-goal path"
+        assert _entity_list(prompt) == [], f"{prompt!r} unexpectedly yields entities: {_entity_list(prompt)}"
 
 
 def test_second_opinion_never_renders_a_blank_screen_in_silence(client):

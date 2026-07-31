@@ -328,9 +328,8 @@ function isSafeUrl(u){return typeof u==="string" && !/^\s*(javascript|data|vbscr
 //   * the word before the first name is lowercase, or it gets swallowed into it
 //     ("Compare Postgres" would become one subject).
 const PRESETS = [
-  "Compare the databases Postgres, ClickHouse and DuckDB for a 2 TB event table.",
-  "Compare the languages Rust, Go and Java for a high-throughput ingestion service.",
-  "Compare managed identity providers Auth0, Clerk and Cognito for a seed-stage startup.",
+  "Compare the caching layers Redis and Memcached for session storage in a single-region deployment.",
+  "Should we introduce a service mesh once we hit 12 microservices, or is that premature?",
 ];
 
 // ---- conversation state -----------------------------------------------------
@@ -801,7 +800,7 @@ document.querySelectorAll(".theme-switch .swatch").forEach(b=>{
 
 // ---- boot -------------------------------------------------------------------
 const presetBar=document.getElementById("presets");
-const PRESET_LABELS=["Postgres · ClickHouse · DuckDB","Rust · Go · Java","Auth0 · Clerk · Cognito"];
+const PRESET_LABELS=["Redis · Memcached","Service mesh timing?"];
 PRESETS.forEach((p,i)=>{const b=$("button");b.append(T(PRESET_LABELS[i]||("preset "+(i+1))));
   b.title=p;b.onclick=()=>{document.getElementById("prompt").value=p;};presetBar.append(b);});
 document.getElementById("prompt").value=PRESETS[0];
