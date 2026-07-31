@@ -193,7 +193,11 @@ COMPONENTS: dict[str, ComponentSpec] = {
     }, source="custom",
         description="Rows of records sharing the same fields, optionally sortable and "
                     "filterable. Use when every row has the same columns. Not for a single "
-                    "figure (see StatTile) and not for one labelled series (see BarChart)."),
+                    "figure (see StatTile) and not for one labelled series (see BarChart). Not "
+                    "for a comparison of 2+ named options across 2+ shared dimensions where you "
+                    "are supplying the comparative numbers yourself as part of your own answer "
+                    "(see TradeoffRadar for a visual read of the same numbers, or WhatIfSlider if "
+                    "the reader — not you — should decide how much each dimension matters)."),
     "Notice": ComponentSpec("Notice", {
         "text": PropSpec("binding"), "tone": _TONE,
     }, source="custom",
@@ -261,10 +265,21 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "series": PropSpec("binding"),     # [{"name": str, "values": [number, ...]}]
         "fallback": PropSpec("type_ref", default="DataTable"),
     }, source="custom",
-        description="Several named things plotted across the SAME several axes at once, so a "
-                    "reader sees where each one wins and loses in a single glance instead of "
-                    "reading cell by cell. Use for a multi-criteria comparison between options "
-                    "(latency, durability, ops burden, ...). Not for one labelled series across "
+        description="Plots 2+ named options across the SAME 2+ axes as one shape per option, so "
+                    "a reader sees who wins where in a single glance instead of scanning a table "
+                    "cell by cell. SELF-CHECK before reaching for DataTable: are 2 or more named "
+                    "options being compared here at all, on 2 or more shared dimensions (latency, "
+                    "durability, ops burden, cost, ...)? If yes, use this instead — ALWAYS, not "
+                    "only when the prompt explicitly asks for a chart or a visual. NOT exclusive "
+                    "with EvidenceTile: keep an EvidenceTile per subject for its headline sourced "
+                    "fact, and ADD this beneath to show how the subjects stack up against each "
+                    "other — 'what did we learn about X' and 'how do X, Y, Z compare' are two "
+                    "different questions and a decision desk answers both. Example: comparing "
+                    "Kafka, RabbitMQ and NATS on throughput, durability and ops simplicity is a "
+                    "TradeoffRadar, not a DataTable — assign each option a 1-10 score per axis from "
+                    "what the evidence suggests. That score is a synthesised judgement, the same "
+                    "kind EvidenceTile's own confidence rating already makes about a single claim, "
+                    "not an invented research figure. Not for one labelled series across "
                     "categories (see BarChart) and not for plain rows of records with no shared "
                     "axes to plot (see DataTable)."),
     "WhatIfSlider": ComponentSpec("WhatIfSlider", {
@@ -273,12 +288,19 @@ COMPONENTS: dict[str, ComponentSpec] = {
         "options": PropSpec("binding"),    # [{"name": str, "scores": {criterionKey: number}}]
         "fallback": PropSpec("type_ref", default="DataTable"),
     }, source="custom",
-        description="A weighted ranking the reader can interrogate: one slider per criterion, "
-                    "an option list re-ranked live, entirely in the client, as a weight moves. Use "
-                    "when the right answer depends on priorities the reader holds, not the agent "
-                    "— a prioritisation call between initiatives, not a settled comparison. Not "
-                    "for a fixed judgement the reader cannot reweigh (see TradeoffRadar) and not "
-                    "for an input the user must submit before anything happens (see Slider)."),
+        description="One slider per criterion, reranking a list of named options live as a weight "
+                    "moves — entirely client-side, no round trip. SELF-CHECK before reaching for "
+                    "DataTable or a plain ranked List: are 2 or more named options being weighed "
+                    "against 2 or more criteria here, with no single fixed weighting stated? If "
+                    "yes, use this instead — ALWAYS, not only when the prompt asks to 'adjust' or "
+                    "'explore' priorities. Example: prioritising 'reduce p99 latency' vs 'cut cloud "
+                    "spend' vs 'improve on-call load' this quarter is a WhatIfSlider, not a "
+                    "DataTable or Timeline — score each option 1-10 per criterion from what you "
+                    "already know about it, and let the reader set the weights, because THEY hold "
+                    "the priorities, not you. Only fall back to DataTable/List when the prompt "
+                    "itself fixes the weighting or asks for one settled answer. Not for a fixed "
+                    "judgement the reader cannot reweigh (see TradeoffRadar) and not for an input "
+                    "the user must submit before anything happens (see Slider)."),
 }
 
 # The closed set of action names a surface may emit. An action the agent did
