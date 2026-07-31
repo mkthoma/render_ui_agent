@@ -545,6 +545,44 @@ function renderRunGraph(c,x){
   wrap.append(tab);return wrap;
 }
 
+// --- shape rescue: the model can only bind to pointers the harness already
+// built (available_pointers is a closed list — it can never invent a fresh
+// one), so it reliably reaches for the nearest existing shape instead of the
+// one these two components actually want: a DataTable's flat table_columns /
+// table_rows. Rather than render "no data" every time that happens, detect
+// it and reshape it here — first column becomes the option's name, every
+// other column becomes an axis/criterion, and a qualitative cell ("Very
+// High", "Low (Complex)") becomes a comparable score via keyword matching.
+function qualScore(v){
+  if(v==null||v==="")return 5;
+  const s=String(v).trim();
+  if(/^[+-]?[\d.]+%?$/.test(s))return parseFloat(s);
+  const low=s.toLowerCase();
+  const table=[["very high",9],["extremely high",9],["excellent",9],["high",7.5],
+               ["moderate",5],["medium",5],["average",5],["configurable",5],
+               ["low",3],["very low",1.5],["minimal",1.5],["none",0.5],["poor",1.5],
+               ["complex",2.5],["difficult",2.5],["simple",8],["easy",8]];
+  for(const [key,score] of table){if(low.includes(key))return score;}
+  return 5;
+}
+function reshapeTableSeries(axes,series){
+  if(series.length&&series.every(s=>s&&Array.isArray(s.values)))
+    return {axes,series:series};
+  const cols=axes.length?axes:(series[0]&&typeof series[0]==="object"?Object.keys(series[0]):[]);
+  if(cols.length<2||!series.length)return {axes:[],series:[]};
+  const [nameKey,...axisKeys]=cols;
+  const rows=series.filter(r=>r&&typeof r==="object");
+  // A genuine table_rows match has at least one axis key sitting directly on
+  // the row; a same-shape-but-wrong pointer (a flat {label,value} metrics
+  // list bound where series was expected, say) has none of them — forcing
+  // that through plots an identical meaningless score on every axis for
+  // every option instead of admitting there is nothing here to plot.
+  const usable=rows.filter(row=>axisKeys.some(k=>Object.prototype.hasOwnProperty.call(row,k)));
+  if(usable.length<2)return {axes:[],series:[]};
+  return {axes:axisKeys,
+    series:usable.map(row=>({name:String(row[nameKey]??""),values:axisKeys.map(k=>qualScore(row[k]))}))};
+}
+
 // --- TradeoffRadar: several named things across the SAME axes at once ------
 // A DataTable makes the reader compare cell by cell; a radar polygon per
 // series lets them see where each option wins and loses in one glance. Each
@@ -552,8 +590,9 @@ function renderRunGraph(c,x){
 // an axis measured in raw throughput (thousands) cannot swamp an axis that is
 // a 0-10 ops-burden score — every spoke gets the same visual weight.
 function renderTradeoffRadar(c,x){
-  const axes=(resolve(c.axes,x.dm)||[]).map(String);
-  const series=(resolve(c.series,x.dm)||[]).filter(s=>s&&Array.isArray(s.values));
+  const rawAxes=(resolve(c.axes,x.dm)||[]).map(String);
+  const rawSeries=resolve(c.series,x.dm)||[];
+  const {axes,series}=reshapeTableSeries(rawAxes,rawSeries);
   const wrap=$("div","chart");const t=$("div","ct");t.append(T(c.title||"tradeoff"));wrap.append(t);
   if(!axes.length||!series.length){const p=$("div");p.append(T("no data to plot"));wrap.append(p);return wrap;}
   const N=axes.length,W=280,H=252,cx=W/2,cy=H/2-4,RAD=Math.min(W,H)/2-42;
@@ -597,6 +636,29 @@ function renderTradeoffRadar(c,x){
   return wrap;
 }
 
+// Same shape-rescue as TradeoffRadar's reshapeTableSeries, for criteria/
+// options instead of axes/series: a flat table_columns/table_rows pair
+// becomes {key,label,weight} criteria (starting weight split evenly at 50)
+// and {name,scores} options, with qualScore() reading each cell.
+function reshapeTableCriteria(rawCriteria,rawOptions){
+  const looksRight=rawCriteria.length&&rawCriteria.every(cr=>cr&&typeof cr==="object"&&cr.key);
+  if(looksRight)return {criteria:rawCriteria,options:rawOptions.filter(o=>o&&o.name&&o.scores)};
+  const cols=rawCriteria.length&&typeof rawCriteria[0]==="string"?rawCriteria
+             :(rawOptions[0]&&typeof rawOptions[0]==="object"?Object.keys(rawOptions[0]):[]);
+  if(cols.length<2||!rawOptions.length)return {criteria:[],options:[]};
+  const [nameKey,...critKeys]=cols;
+  const rows=rawOptions.filter(r=>r&&typeof r==="object");
+  // Same rescue-vs-refuse check as reshapeTableSeries: a row that has none of
+  // the criterion keys on it is bound to the wrong pointer entirely (a flat
+  // metrics list, say), not this table's rows — refuse rather than fabricate
+  // an identical default score under every criterion for every option.
+  const usable=rows.filter(row=>critKeys.some(k=>Object.prototype.hasOwnProperty.call(row,k)));
+  if(usable.length<2)return {criteria:[],options:[]};
+  return {criteria:critKeys.map(k=>({key:k,label:k,weight:50})),
+    options:usable.map(row=>({name:String(row[nameKey]??""),
+      scores:Object.fromEntries(critKeys.map(k=>[k,qualScore(row[k])]))}))};
+}
+
 // --- WhatIfSlider: a ranking the reader can reweigh, not just read ---------
 // Every other data-viz component in this catalog is a fixed rendering of a
 // fixed data model. This one lets a weight move and the ranking below it
@@ -604,8 +666,9 @@ function renderTradeoffRadar(c,x){
 // no new run. The insight is in watching the order change, not in any single
 // frozen ranking, so the interaction has to feel instant to mean anything.
 function renderWhatIfSlider(c,x){
-  const criteria=(resolve(c.criteria,x.dm)||[]).filter(cr=>cr&&cr.key);
-  const options=(resolve(c.options,x.dm)||[]).filter(o=>o&&o.name&&o.scores);
+  const rawCriteria=resolve(c.criteria,x.dm)||[];
+  const rawOptions=resolve(c.options,x.dm)||[];
+  const {criteria,options}=reshapeTableCriteria(rawCriteria,rawOptions);
   const wrap=$("div","chart");const t=$("div","ct");t.append(T(c.title||"what-if"));wrap.append(t);
   if(!criteria.length||!options.length){const p=$("div");p.append(T("no data to weigh"));wrap.append(p);return wrap;}
   const weights={};criteria.forEach(cr=>{weights[cr.key]=Math.max(0,Math.min(100,+cr.weight||50));});
@@ -812,15 +875,17 @@ function goalFor(text,kind){
 }
 
 // Free-tier services sleep independently after idling. /decide's own load
-// already fires a wake-ping at the gateway, but a genuinely cold start (~50s)
-// can still lose the race against someone who types fast — the very first
-// fetch below then fails with a connection error or a run that never
-// composed. Rather than surface that as a dead-end failure, retry a bounded
-// number of times with a visible "waking up" message; if the gateway really
-// is just slow to boot, the same request that failed a moment ago succeeds
-// once it is warm.
-const GATEWAY_WAKE_RETRIES=6;
-const GATEWAY_WAKE_DELAY_MS=8000;
+// already fires a wake-ping at the gateway, but a genuinely cold start
+// (documented as "roughly 50s" for Render's free tier, and that is a typical
+// figure, not a ceiling) can still lose the race against someone who types
+// fast — the very first fetch below then fails with a connection error or a
+// run that never composed. 6 retries at 8s (48s of delay total) was cutting
+// it against that 50s figure with essentially no safety margin: a wake that
+// ran even slightly slower than typical exhausted every retry and surfaced
+// as a dead end. 12 retries at 10s (120s of delay, before counting each
+// attempt's own duration) gives real headroom instead of a coin flip.
+const GATEWAY_WAKE_RETRIES=12;
+const GATEWAY_WAKE_DELAY_MS=10000;
 function wait(ms){return new Promise(r=>setTimeout(r,ms));}
 
 async function runTurn(text,kind){

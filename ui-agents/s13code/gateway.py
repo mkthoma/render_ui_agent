@@ -48,7 +48,14 @@ class GatewayClient:
         return {"text": body.get("text", ""), "provider": body.get("provider"), "model": body.get("model")}
 
     async def health(self) -> dict[str, Any]:
-        response = await self._client.get(f"{self.base_url}/healthz", timeout=3)
+        # Free-tier Render takes roughly 50s to wake a sleeping service, and
+        # this call is the wake-ping /decide fires on page load as a
+        # BackgroundTask (non-blocking -- the page response is already sent
+        # before this runs, so a long wait here costs the user nothing). A
+        # short timeout would abort before the gateway ever finishes booting,
+        # making the ping fire-and-forget in the worst possible sense: fired,
+        # then forgotten before it could do any good.
+        response = await self._client.get(f"{self.base_url}/healthz", timeout=90)
         response.raise_for_status()
         return response.json()
 
