@@ -1315,8 +1315,8 @@ def test_content_role_is_asked_to_attribute_every_figure_it_states():
 
 
 def test_second_opinion_presets_take_the_path_that_produces_evidence(client):
-    """A "Compare" preset that cannot fill /claims is a preset that cannot show
-    the app's evidence path.
+    """A preset that cannot fill /claims is a preset that cannot show the app's
+    evidence path.
 
     Regression for a real mistake: the first three presets were prose questions
     ("should we move from Postgres to ClickHouse?"). Those route to the
@@ -1326,17 +1326,22 @@ def test_second_opinion_presets_take_the_path_that_produces_evidence(client):
 
     Only the entity fan-out produces sourced claims, and it needs a
     comma-separated list of capitalised names, mid-sentence, preceded by a
-    lowercase word. The presets now deliberately mix ONE such prompt with ONE
-    plain decision question specifically to demonstrate the other path — that
-    second preset is asserted separately below, not held to this invariant.
+    lowercase word. Presets are partitioned by their ACTUAL routed mode, not by
+    a "starts with Compare" text guess — a comparison preset does not have to
+    literally start with the word "Compare" ("How do Kafka, RabbitMQ and NATS
+    trade off..." routes to compose_research just as well), and pinning the
+    test to that one surface phrasing would make it blind to real regressions
+    in any preset worded differently.
     """
     from s13code.runtime import _entity_list, _work_intent
 
     html = client.get("/decide").text
-    presets = re.findall(r'^\s*"(Compare[^"]+)",\s*$', html, re.MULTILINE)
-    assert len(presets) >= 1, f"expected at least one entity-comparison preset, found {presets}"
+    presets = re.findall(r'^\s*"([^"]+)",\s*$', html, re.MULTILINE)
+    assert len(presets) >= 3, f"expected the shipped presets, found {presets}"
+    research_presets = [p for p in presets if _work_intent(p, "ui")[0] == "compose_research"]
+    assert research_presets, f"expected at least one entity-comparison preset, found {presets}"
 
-    for prompt in presets:
+    for prompt in research_presets:
         mode, frontier = _work_intent(prompt, "ui")
         assert mode == "compose_research", f"{prompt!r} routes to {mode}, which yields no claims"
         assert len(frontier) >= 2, f"{prompt!r} fans out only {len(frontier)} researcher(s)"
@@ -1348,18 +1353,19 @@ def test_second_opinion_presets_take_the_path_that_produces_evidence(client):
 
 
 def test_second_opinion_has_a_preset_on_the_single_goal_path_too(client):
-    """The presets deliberately include one plain decision question alongside
-    the entity-comparison preset above, so a visitor can see BOTH composed
-    shapes the app can produce without typing anything: the research fan-out
-    (Compare A and B ...) and the single-goal path (content -> surface, no
-    researcher nodes, no EvidenceTile). This pins the second shape down the
-    same way the test above pins the first."""
+    """The presets deliberately include plain decision questions alongside the
+    entity-comparison preset above, so a visitor can see BOTH composed shapes
+    the app can produce without typing anything: the research fan-out and the
+    single-goal path (content -> surface, no researcher nodes, no
+    EvidenceTile). This pins the second shape down the same way the test above
+    pins the first, partitioning by actual routed mode rather than a text
+    guess about wording."""
     from s13code.runtime import _entity_list, _work_intent
 
     html = client.get("/decide").text
     presets = re.findall(r'^\s*"([^"]+)",\s*$', html, re.MULTILINE)
-    single_goal = [p for p in presets if not p.startswith("Compare")]
-    assert single_goal, f"expected a non-Compare preset for the single-goal path, found {presets}"
+    single_goal = [p for p in presets if _work_intent(p, "ui")[0] == "compose_answer"]
+    assert single_goal, f"expected a single-goal-path preset, found {presets}"
 
     for prompt in single_goal:
         mode, _frontier = _work_intent(prompt, "ui")
